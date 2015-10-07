@@ -8,14 +8,20 @@
 #ifndef TRADEHANDLER_H_
 #define TRADEHANDLER_H_
 
-namespace qtp_bl
+#include "../apis/dce/Linux/trade/lib/TradeAPI.h"
+
+namespace qtp
 {
 
-class trade_handler
+class dce_trade_handler
 {
 public:
-	trade_handler();
-	virtual ~trade_handler();
+	dce_trade_handler();
+	virtual ~dce_trade_handler();
+
+public:
+	void check_conn();
+
 };
 
 } /* namespace qtp_bl */

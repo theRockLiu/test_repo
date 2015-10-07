@@ -8,15 +8,55 @@
 #ifndef SHARED_H_
 #define SHARED_H_
 
-namespace qtp_bl
+#include <cstdint>
+
+#include "../utils/singleton.h"
+#include "quothandler.h"
+#include "tradehandler.h"
+
+namespace qtp
 {
 
+struct quot_info
+{
+	uint32_t excode : 4; //exchnge code
+	uint32_t cid : 10; //contract id
+	uint32_t l1_bid_pl : 8;
+	uint32_t l1_ask_pl : 8;
+	uint32_t l2_bid_pl : 8;
+	uint32_t l2_ask_pl : 8;
+};
+
+struct order_info
+{
+	uint32_t excode : 4;
+	uint32_t cid : 10;
+};
+
+///
 class shared
 {
 public:
 	shared();
 	virtual ~shared();
+
+public:
+	void exec();
+	void handle_quot(struct quot_info& qi);
+	void handle_x();
+	void handle_res();
+
+	/**
+	 *
+	 * */
+	int_fast32_t async_send_command(struct order_info& oi);
+
+private:
+	qtp::dce_trade_handler dth_;
+	qtp::dce_quot_handler dqh_;
 };
+
+#define SHARED_OBJ() utils::singleton<shared>::inst();
 
 } /* namespace qtp_bl */
 

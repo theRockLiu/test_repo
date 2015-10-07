@@ -20,7 +20,7 @@ int32_t main(int32_t argc, char* argv[])
 
 	string_t cf("default.cfg");
 
-	qtp_fw::engine::pointer_t peg = std::make_shared<qtp_fw::engine>();
+	qtp_fw::engine::pointer_t egn = std::make_shared<qtp_fw::engine>();
 
-	return peg->run(cf);
+	return egn->run(cf);
 }

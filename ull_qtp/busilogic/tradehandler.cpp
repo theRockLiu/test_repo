@@ -7,16 +7,16 @@
 
 #include "tradehandler.h"
 
-namespace qtp_bl
+namespace qtp
 {
 
-trade_handler::trade_handler()
+dce_trade_handler::dce_trade_handler()
 {
 	// TODO Auto-generated constructor stub
 
 }
 
-trade_handler::~trade_handler()
+dce_trade_handler::~dce_trade_handler()
 {
 	// TODO Auto-generated destructor stub
 }

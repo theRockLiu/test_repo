@@ -7,7 +7,7 @@
 
 #include "tradehandler.h"
 
-namespace qtp_bl
+namespace qtp
 {
 
 } /* namespace qtp_bl */
