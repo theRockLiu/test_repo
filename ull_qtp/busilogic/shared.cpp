@@ -40,10 +40,10 @@ int_fast32_t shared::async_send_command(struct order_info& oi)
 void qtp::shared::exec()
 {
 	///check trade conn
-	//dth_.check_conn();
+	dth_.check_conn();
 
 	///check quot conn
-	//dqh_.check_conn();
+	dqh_.check_conn();
 }
 
 void qtp::shared::handle_x()

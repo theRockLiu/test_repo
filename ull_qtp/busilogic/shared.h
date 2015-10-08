@@ -56,7 +56,7 @@ private:
 	qtp::dce_quot_handler dqh_;
 };
 
-#define SHARED_OBJ() utils::singleton<shared>::inst();
+#define SHARED_OBJ() utils::singleton<qtp::shared>::inst()
 
 } /* namespace qtp_bl */
 

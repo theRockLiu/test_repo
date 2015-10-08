@@ -18,6 +18,7 @@
 #include "libcli.h"
 
 #include "engine.h"
+#include "../busilogic/shared.h"
 
 #ifdef __GNUC__
 # define UNUSED(d) d __attribute__ ((unused))
@@ -25,13 +26,15 @@
 # define UNUSED(d) d
 #endif
 
-#define CLITEST_PORT                8000
+#define CLI_PORT                8000
 
 namespace
 {
 
 int32_t regular_callback(struct cli_def *cli)
 {
+
+	SHARED_OBJ().exec();
 //	regular_count++;
 //	if (debug_regular)
 //	{
@@ -224,7 +227,7 @@ int_fast32_t engine::run(const string_t& cf)
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port = htons(CLITEST_PORT);
+	addr.sin_port = htons(CLI_PORT);
 	if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) < 0)
 	{
 		perror("bind");
@@ -237,7 +240,7 @@ int_fast32_t engine::run(const string_t& cf)
 		return 1;
 	}
 
-	printf("Listening on port %d\n", CLITEST_PORT);
+	printf("Listening on port %d\n", CLI_PORT);
 	while ((x = accept(s, NULL, 0)))
 	{
 		cli_loop(cli, x);

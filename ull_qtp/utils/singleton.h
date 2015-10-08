@@ -8,18 +8,24 @@
 #ifndef SINGLETON_H_
 #define SINGLETON_H_
 
+#include "../common/common.h"
+
 namespace utils
 {
 
 template<typename T>
 class singleton
 {
+private:
+	static T* x_;
+
 	class dummy
 	{
 	public:
-		dummy() :
-				singleton<T>::x_(new T)
+		dummy()
 		{
+			singleton<T>::x_ = new T;
+			ASSERT(nullptr != singleton<T>::x_);
 		}
 	};
 
@@ -39,10 +45,10 @@ public:
 			x_ = nullptr;
 		}
 	}
-
-private:
-	static T* x_;
 };
+
+template<typename T>
+T* singleton<T>::x_ = nullptr;
 
 }
 
