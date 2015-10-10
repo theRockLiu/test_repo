@@ -8,8 +8,6 @@
 #include "../include/qtp.h"
 #include "quothandler.h"
 
-#define ASSERT(x)
-
 namespace qtp
 {
 
@@ -74,12 +72,14 @@ int dce_quot_handler::onMarketDataArbiMBLQuot(UINT4 nSeqNo,
 		const _fldArbiBestQuot& arbibestquot,
 		CAPIVector<_fldMBLQuot>& lstMBLQuot, BYTE bChainFlag)
 {
+	return 0;
 }
 
 int dce_quot_handler::onRspQuotTraderPwdUpd(UINT4 nSeqNo,
 		const _fldRspMsg& rspmsg, const _fldTraderPwdUpdReq& traderpwdupdreq,
 		BYTE bChainFlag)
 {
+	return 0;
 }
 
 int dce_quot_handler::onRspQueryHistoryQuot(UINT4 nSeqNo,
@@ -87,16 +87,19 @@ int dce_quot_handler::onRspQueryHistoryQuot(UINT4 nSeqNo,
 		CAPIVector<_fldOptPara>& lstOptPara,
 		CAPIVector<_fldMBLQuot>& lstMBLQuot, BYTE bChainFlag)
 {
+	return 0;
 }
 
 int dce_quot_handler::onNtyCloseMktNotice(UINT4 nSeqNo,
 		const _fldMktDataNotice& mktdatanotice, BYTE bChainFlag)
 {
+	return 0;
 }
 
 int dce_quot_handler::onInvalidPackage(UINT4 nTID, WORD nSeries,
 		UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char* pAddr)
 {
+	return 0;
 }
 
 void dce_quot_handler::check_conn()

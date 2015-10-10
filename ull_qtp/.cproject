@@ -34,6 +34,7 @@
 								<option id="gnu.cpp.compiler.option.dialect.std.1787013100" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++1y" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.561579260" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libcli}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libutils}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1740085474" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

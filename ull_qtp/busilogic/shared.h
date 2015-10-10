@@ -10,6 +10,9 @@
 
 #include <cstdint>
 
+#include <log/spdlog/include/spdlog/spdlog.h>
+namespace spd = spdlog;
+
 #include "../utils/singleton.h"
 #include "quothandler.h"
 #include "tradehandler.h"
@@ -41,6 +44,7 @@ public:
 	virtual ~shared();
 
 public:
+	int_fast32_t init(const string_t cf);
 	void exec();
 	void handle_quot(struct quot_info& qi);
 	void handle_x();
@@ -54,6 +58,9 @@ public:
 private:
 	qtp::dce_trade_handler dth_;
 	qtp::dce_quot_handler dqh_;
+
+	///logger
+	std::shared_ptr<spd::logger> console_logger_, async_file_logger_;
 };
 
 #define SHARED_OBJ() utils::singleton<qtp::shared>::inst()

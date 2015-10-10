@@ -22,3 +22,7 @@ dce_trade_handler::~dce_trade_handler()
 }
 
 } /* namespace qtp_bl */
+
+void qtp::dce_trade_handler::check_conn()
+{
+}

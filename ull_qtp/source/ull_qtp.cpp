@@ -11,6 +11,12 @@ using namespace std;
 
 #include "../framework/engine.h"
 
+class algo1 : public qtp::algo_base
+{
+
+};
+
+
 int32_t main(int32_t argc, char* argv[])
 {
 	if (2 != argc)
@@ -18,8 +24,8 @@ int32_t main(int32_t argc, char* argv[])
 		return -1;
 	}
 
-	string_t cf("default.cfg");
-	qtp_fw::engine::pointer_t egn = std::make_shared<qtp_fw::engine>();
+	string_t cf("qtp.json");
+	qtp::engine::pointer_t egn = std::make_shared<qtp::engine>();
 
 	return egn->run(cf);
 }

@@ -14,21 +14,25 @@
 
 #include "../common/common.h"
 
-namespace qtp_fw
+namespace qtp
 {
 
-class engine
+
+
+
+class qtp_engine
 {
 public:
-	typedef std::shared_ptr<qtp_fw::engine> pointer_t;
+	typedef std::shared_ptr<qtp::qtp_engine> pointer_t;
 public:
-	engine();
-	~engine();
+	qtp_engine();
+	~qtp_engine();
 
 public:
+	int_fast32_t add_algo();
 	int_fast32_t run(const string_t& cf);
 };
 
-} /* namespace qtp_fw */
+} /* namespace qtp */
 
 #endif /* ENGINE_H_ */

@@ -15,7 +15,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "libcli.h"
+
+#include <libcli.h>
+
 
 #include "engine.h"
 #include "../busilogic/shared.h"
@@ -121,7 +123,7 @@ void pc(UNUSED(struct cli_def *cli), const char *string)
 
 }
 
-using namespace qtp_fw;
+using namespace qtp;
 
 
 engine::engine()
@@ -137,6 +139,13 @@ engine::~engine()
 
 int_fast32_t engine::run(const string_t& cf)
 {
+	if (SHARED_OBJ().init(cf) < 0)
+	{
+		return -1;
+	}
+
+
+
 	struct cli_command *c;
 	struct cli_def *cli;
 	int s, x;
