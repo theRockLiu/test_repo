@@ -5,6 +5,8 @@
  *      Author: rock
  */
 
+#include "shared.h"
+
 #include "../include/qtp.h"
 #include "quothandler.h"
 
@@ -57,13 +59,12 @@ int dce_quot_handler::onMarketDataMBLQuot(UINT4 nSeqNo,
 		const _fldBestQuot& bestquot, CAPIVector<_fldOptPara>& lstOptPara,
 		CAPIVector<_fldMBLQuot>& lstMBLQuot, BYTE bChainFlag)
 {
-//	ASSERT(CHAIN_SINGLE == bChainFlag);
-//
-//	struct quot_info qi = {0};
-//
-//	SHARED_OBJ().handle_quot(qi);
-//
-//	SHARED_OBJ().handle_x();
+	ASSERT(CHAIN_SINGLE == bChainFlag);
+
+	struct quot_info qi = {0};
+
+	SHARED_OBJ().handle_quot(qi);
+
 
 	return 0;
 }

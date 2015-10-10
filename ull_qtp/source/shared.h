@@ -9,6 +9,7 @@
 #define SHARED_H_
 
 #include <cstdint>
+#include <vector>
 
 #include <log/spdlog/include/spdlog/spdlog.h>
 namespace spd = spdlog;
@@ -16,6 +17,7 @@ namespace spd = spdlog;
 #include "../utils/singleton.h"
 #include "quothandler.h"
 #include "tradehandler.h"
+#include "../include/qtp.h"
 
 namespace qtp
 {
@@ -47,6 +49,8 @@ public:
 	int_fast32_t init(const string_t cf);
 	void exec();
 	void handle_quot(struct quot_info& qi);
+	void handle_cmd_res();
+	void handle_match_res();
 	void handle_x();
 	void handle_res();
 
@@ -56,9 +60,10 @@ public:
 	int_fast32_t async_send_command(struct order_info& oi);
 
 private:
-	qtp::dce_trade_handler dth_;
-	qtp::dce_quot_handler dqh_;
-
+//	qtp::dce_trade_handler dth_;
+//	qtp::dce_quot_handler dqh_;
+	//
+	std::vector<qtp::algo_base::pointer_t> algos_;
 	///logger
 	std::shared_ptr<spd::logger> console_logger_, async_file_logger_;
 };
