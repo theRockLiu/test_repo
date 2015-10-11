@@ -9,7 +9,7 @@
 
 #include "../include/qtp.h"
 
-using namespace qtp;
+using namespace atp;
 //
 //void qtp_engine::run()
 //{

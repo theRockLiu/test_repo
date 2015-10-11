@@ -5,9 +5,6 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../source/campservice.cpp \
-../source/engine.cpp \
-../source/engine_test.cpp \
-../source/qtp.cpp \
 ../source/quothandler.cpp \
 ../source/quothandler_test.cpp \
 ../source/shared.cpp \
@@ -18,9 +15,6 @@ CPP_SRCS += \
 
 OBJS += \
 ./source/campservice.o \
-./source/engine.o \
-./source/engine_test.o \
-./source/qtp.o \
 ./source/quothandler.o \
 ./source/quothandler_test.o \
 ./source/shared.o \
@@ -31,9 +25,6 @@ OBJS += \
 
 CPP_DEPS += \
 ./source/campservice.d \
-./source/engine.d \
-./source/engine_test.d \
-./source/qtp.d \
 ./source/quothandler.d \
 ./source/quothandler_test.d \
 ./source/shared.d \

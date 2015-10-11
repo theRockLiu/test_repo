@@ -7,10 +7,9 @@
 
 #include "shared.h"
 
-#include "../include/qtp.h"
 #include "quothandler.h"
 
-namespace qtp
+namespace atp
 {
 
 dce_quot_handler::dce_quot_handler()
@@ -22,18 +21,6 @@ dce_quot_handler::dce_quot_handler()
 dce_quot_handler::~dce_quot_handler()
 {
 	// TODO Auto-generated destructor stub
-}
-
-int dce_quot_handler::onRspTraderPwdUpd(UINT4 nSeqNo, const _fldRspMsg& rspmsg,
-		const _fldTraderPwdUpdReq& traderpwdupdreq, BYTE bChainFlag)
-{
-	return 0;
-}
-
-int dce_quot_handler::onNtySnapShotQuot(UINT4 nSeqNo,
-		const _fldQuotQryReq& quotqryreq, BYTE bChainFlag)
-{
-	return 0;
 }
 
 int dce_quot_handler::onRspQuotUserLogout(UINT4 nSeqNo,
@@ -61,10 +48,8 @@ int dce_quot_handler::onMarketDataMBLQuot(UINT4 nSeqNo,
 {
 	ASSERT(CHAIN_SINGLE == bChainFlag);
 
-	struct quot_info qi = {0};
-
+	struct quot_info qi;// = {.cid = utils::hash_str(bestquot.ContractID.GetBuf())};
 	SHARED_OBJ().handle_quot(qi);
-
 
 	return 0;
 }
@@ -79,14 +64,6 @@ int dce_quot_handler::onMarketDataArbiMBLQuot(UINT4 nSeqNo,
 int dce_quot_handler::onRspQuotTraderPwdUpd(UINT4 nSeqNo,
 		const _fldRspMsg& rspmsg, const _fldTraderPwdUpdReq& traderpwdupdreq,
 		BYTE bChainFlag)
-{
-	return 0;
-}
-
-int dce_quot_handler::onRspQueryHistoryQuot(UINT4 nSeqNo,
-		const _fldRspMsg& rspmsg, const _fldBestQuot& bestquot,
-		CAPIVector<_fldOptPara>& lstOptPara,
-		CAPIVector<_fldMBLQuot>& lstMBLQuot, BYTE bChainFlag)
 {
 	return 0;
 }

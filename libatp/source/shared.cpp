@@ -10,9 +10,10 @@
 #include <json/json/src/json.hpp>
 using json = nlohmann::json;
 
+#include "../include/atp.h"
 #include "shared.h"
 
-namespace qtp
+namespace atp
 {
 
 shared::shared()
@@ -28,17 +29,10 @@ shared::~shared()
 
 void shared::handle_quot(struct quot_info& qi)
 {
-	for (auto iter = algos_.begin(); iter != algos_.end(); ++iter)
+	for (auto iter = quot_subscribers_[qi.cid].begin(); iter != quot_subscribers_[qi.cid].end(); ++iter)
 	{
 		(*iter)->handle_quot(qi);
 	}
-//	///TODO: quant logic.
-//
-//	///send command
-//	struct order_info oi =
-//	{ 0 };
-//	int_fast32_t ret = async_send_command(oi);
-
 }
 
 int_fast32_t shared::async_send_command(struct order_info& oi)
@@ -52,11 +46,11 @@ int_fast32_t shared::async_send_command(struct order_info& oi)
 
 void shared::exec()
 {
-	///check trade conn
-	dth_.check_conn();
-
-	///check quot conn
-	dqh_.check_conn();
+//	///check trade conn
+//	dth_.check_conn();
+//
+//	///check quot conn
+//	dqh_.check_conn();
 }
 
 void shared::handle_x()
@@ -164,11 +158,21 @@ int_fast32_t shared::init(const string_t cf)
 	return RET_SUC;
 }
 
-//int_fast32_t qtp::shared::async_send_command(struct order_info& oi)
-//{
-//}
-//int_fast32_t qtp::shared::async_send_command(struct order_info& oi)
-//{
-//}
+
+int_fast32_t algo_engine::init()
+{
+	return 0;
+}
+
+int_fast32_t algo_engine::reg_algo(algo_base::pointer_t& algos,
+		std::vector<std::string>& contract_ids)
+{
+	return 0;
+}
+
+int_fast32_t algo_engine::run_and_wait()
+{
+	return 0;
+}
 
 } /* namespace qtp_bl */

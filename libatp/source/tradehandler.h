@@ -10,7 +10,7 @@
 
 #include "../apis/dce/Linux/trade/lib/TradeAPI.h"
 
-namespace qtp
+namespace atp
 {
 
 class dce_trade_handler

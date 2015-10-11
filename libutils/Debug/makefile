@@ -8,7 +8,13 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include source/subdir.mk
+-include log/spdlog/tests/subdir.mk
+-include log/spdlog/include/spdlog/details/subdir.mk
+-include log/spdlog/example/subdir.mk
+-include log/spdlog/bench/subdir.mk
+-include json/json/test/subdir.mk
+-include json/json/doc/examples/subdir.mk
+-include json/json/benchmarks/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -38,19 +44,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libatp.a
+all: liblibutils.a
 
 # Tool invocations
-libatp.a: $(OBJS) $(USER_OBJS)
+liblibutils.a: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Archiver'
-	ar -r  "libatp.a" $(OBJS) $(USER_OBJS) $(LIBS)
+	ar -r  "liblibutils.a" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(ARCHIVES)$(C_DEPS)$(CPP_DEPS) libatp.a
+	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(ARCHIVES)$(C_DEPS)$(CPP_DEPS) liblibutils.a
 	-@echo ' '
 
 .PHONY: all clean dependents

@@ -18,9 +18,7 @@
 
 #include <libcli.h>
 
-
-#include "engine.h"
-#include "../busilogic/shared.h"
+#include "shared.h"
 
 #ifdef __GNUC__
 # define UNUSED(d) d __attribute__ ((unused))
@@ -123,7 +121,7 @@ void pc(UNUSED(struct cli_def *cli), const char *string)
 
 }
 
-using namespace qtp;
+using namespace atp;
 
 
 engine::engine()

@@ -10,7 +10,7 @@
 #include "../include/qtp.h"
 #include "quothandler.h"
 
-namespace qtp
+namespace atp
 {
 
 dce_quot_handler::dce_quot_handler()

@@ -8,8 +8,6 @@
 #ifndef SINGLETON_H_
 #define SINGLETON_H_
 
-#include "../common/common.h"
-
 namespace utils
 {
 

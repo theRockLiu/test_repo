@@ -7,7 +7,7 @@
 
 #include "campservice.h"
 
-namespace qtp
+namespace atp
 {
 
 camp_service::camp_service()

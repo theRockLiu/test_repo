@@ -8,7 +8,7 @@
 #ifndef CAMPSERVICE_H_
 #define CAMPSERVICE_H_
 
-namespace qtp
+namespace atp
 {
 
 class camp_service

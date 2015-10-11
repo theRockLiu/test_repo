@@ -14,24 +14,14 @@
 #include <log/spdlog/include/spdlog/spdlog.h>
 namespace spd = spdlog;
 
-#include "../utils/singleton.h"
+#include <cmn/common.h>
+#include <utils/singleton.h>
 #include "quothandler.h"
 #include "tradehandler.h"
-#include "../include/qtp.h"
+#include "../include/atp.h"
 
-namespace qtp
+namespace atp
 {
-
-struct quot_info
-{
-	uint32_t excode : 4; //exchnge code
-	uint32_t cid : 10; //contract id
-	uint32_t l1_bid_pl : 8;
-	uint32_t l1_ask_pl : 8;
-	uint32_t l2_bid_pl : 8;
-	uint32_t l2_ask_pl : 8;
-};
-
 struct order_info
 {
 	uint32_t excode : 4;
@@ -63,12 +53,14 @@ private:
 //	qtp::dce_trade_handler dth_;
 //	qtp::dce_quot_handler dqh_;
 	//
-	std::vector<qtp::algo_base::pointer_t> algos_;
+	typedef std::vector<atp::algo_base::pointer_t> algos_t;
+
+	std::unordered_map<uint32_t, algos_t> quot_subscribers_;
 	///logger
 	std::shared_ptr<spd::logger> console_logger_, async_file_logger_;
 };
 
-#define SHARED_OBJ() utils::singleton<qtp::shared>::inst()
+#define SHARED_OBJ() utils::singleton<atp::shared>::inst()
 
 } /* namespace qtp_bl */
 

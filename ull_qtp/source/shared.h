@@ -19,7 +19,7 @@ namespace spd = spdlog;
 #include "tradehandler.h"
 #include "../include/qtp.h"
 
-namespace qtp
+namespace atp
 {
 
 struct quot_info
@@ -63,7 +63,7 @@ private:
 //	qtp::dce_trade_handler dth_;
 //	qtp::dce_quot_handler dqh_;
 	//
-	std::vector<qtp::algo_base::pointer_t> algos_;
+	std::vector<atp::algo_base::pointer_t> algos_;
 	///logger
 	std::shared_ptr<spd::logger> console_logger_, async_file_logger_;
 };

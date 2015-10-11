@@ -15,13 +15,13 @@
 #include "../busilogic/tradehandler.h"
 #include "../busilogic/quothandler.h"
 
-namespace qtp
+namespace atp
 {
 
 class algo_base
 {
 public:
-	typedef std::shared_ptr<qtp::algo_base> pointer_t;
+	typedef std::shared_ptr<atp::algo_base> pointer_t;
 
 public:
 	algo_base(){}
@@ -47,12 +47,12 @@ public:
 
 }
 
-inline int_fast32_t qtp::qtp_engine::init()
+inline int_fast32_t atp::qtp_engine::init()
 {
 	return 0;
 }
 
-inline int_fast32_t qtp::qtp_engine::add_algo()
+inline int_fast32_t atp::qtp_engine::add_algo()
 {
 	return 0;
 }

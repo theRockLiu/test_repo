@@ -12,7 +12,7 @@ using json = nlohmann::json;
 
 #include "shared.h"
 
-namespace qtp
+namespace atp
 {
 
 shared::shared()

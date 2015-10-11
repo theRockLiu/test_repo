@@ -11,7 +11,7 @@ using namespace std;
 
 #include "../framework/engine.h"
 
-class algo1 : public qtp::algo_base
+class algo1 : public atp::algo_base
 {
 
 };
@@ -25,7 +25,7 @@ int32_t main(int32_t argc, char* argv[])
 	}
 
 	string_t cf("qtp.json");
-	qtp::engine::pointer_t egn = std::make_shared<qtp::engine>();
+	atp::engine::pointer_t egn = std::make_shared<atp::engine>();
 
 	return egn->run(cf);
 }

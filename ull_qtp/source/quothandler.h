@@ -10,7 +10,7 @@
 
 #include "../apis/dce/Linux/quot/lib/QuotAPI.h"
 
-namespace qtp
+namespace atp
 {
 
 class dce_quot_handler: public CQuotAPI
