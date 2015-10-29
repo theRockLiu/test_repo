@@ -10,7 +10,7 @@
 #include <vector>
 using namespace std;
 
-#include <utils/defines.h>
+#include <base/defines.h>
 #include <include/atp.h>
 
 using namespace atp;
@@ -50,11 +50,11 @@ public:
 		}
 		else
 		{
-			ATP_ASSERT(false);
+			SU_ASSERT(false);
 		}
 	}
 
-	void handle_match_res()
+	void handle_match_res(match_res_t &)
 	{
 
 	}
@@ -66,23 +66,11 @@ private:
 int main()
 {
 	atp::algo_engine ae;
-	//ae.init();
-	//ae.reg_algo();
-	ae.run_and_wait();
+	ae.init();
 
-
-//	qtp_engine qe;
-//	qe.init(/*...*/);
-//
-//	myalgo c;
-//	uint32_t quots = DCE_L2_QUOT | CTP_L1_QUOT;
-//	TRY(c.init(quots));
-//	qe.add_algo(c);
-//
-//	myalgo1 c1;
-//	TRY(c1.init(quots));
-//	qe.add_algo(c1);
-//
-//	return qe.run();
+	atp::algo_base::pointer_t p = make_shared<myalgo>();
+	std::vector<std::string> vec = {"test"};
+	ae.reg_algo(p, vec);
+	return ae.run_and_wait();
 }
 

@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS :=
+LIBS := -latp -lsmart_utils -lquotapi64 -ltradeapi64 -lsafeengine64 -lpthread
 
