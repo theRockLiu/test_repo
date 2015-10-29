@@ -173,8 +173,7 @@ int_fast32_t algo_engine::reg_algo(algo_base::pointer_t& algos,
 
 int_fast32_t algo_engine::run_and_wait()
 {
-	SHARED().run_and_wait();
-	return 0;
+	return SHARED().run_and_wait();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,10 +185,23 @@ int_fast32_t algo_base::async_send_cmd(trade_cmd_t &tc)
 
 int_fast32_t shared::run_and_wait()
 {
-
-
+	while (running_flag_)
+	{
+		ne_.check_once(1);
+	}
 
 	return SU_EC_SUC;
+}
+
+void check_conn_timer::handle_timeout(uint64_t times)
+{
+	SHARED().handle_timeout(times);
+}
+
+void shared::handle_timeout(uint64_t times)
+{
+	dce_th_.check_conn();
+	dce_qh_.check_conn();
 }
 
 } /* namespace qtp_bl */

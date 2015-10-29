@@ -15,6 +15,8 @@
 namespace spd = spdlog;
 
 #include <utils/singleton.h>
+#include <utils/notifiers.h>
+
 #include "quothandler.h"
 #include "tradehandler.h"
 #include "../include/atp.h"
@@ -26,6 +28,14 @@ struct order_info
 	uint32_t excode :4;
 	uint32_t cid :10;
 };
+
+
+class check_conn_timer : smart_utils::timer_base
+{
+public:
+	void handle_timeout(uint64_t times);
+};
+
 
 ///
 class shared
@@ -62,11 +72,13 @@ public:
 	}
 
 	int_fast32_t async_send_command(trade_cmd_t& oi);
-
 	int_fast32_t run_and_wait();
+	void handle_timeout(uint64_t times);
 
 private:
 
+	///
+	bool running_flag_;
 	///dce_conn;
 	uint_fast32_t dce_local_no_gen_;
 	dce_trade_handler dce_th_;
@@ -82,6 +94,9 @@ private:
 	std::unordered_map<uint32_t, algos_t> quot_subscribers_;
 	///logger
 	std::shared_ptr<spd::logger> console_logger_, async_file_logger_;
+
+	///
+	smart_utils::notifier_engine ne_;
 };
 
 #define SHARED() smart_utils::singleton<atp::shared>::inst()
