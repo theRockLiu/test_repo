@@ -9,9 +9,13 @@
 #include <fstream>
 #include <json/json/src/json.hpp>
 using json = nlohmann::json;
+#include <base/base.h>
+using namespace smart_utils;
 
 #include "../include/atp.h"
 #include "shared.h"
+
+
 
 namespace atp
 {
@@ -27,19 +31,24 @@ shared::~shared()
 	// TODO Auto-generated destructor stub
 }
 
-void shared::handle_quot(struct quot_info& qi)
+int_fast32_t shared::async_send_command(trade_cmd_t& tc)
 {
-	for (auto iter = quot_subscribers_[qi.cid].begin(); iter != quot_subscribers_[qi.cid].end(); ++iter)
+	if (ATP_ORDER_CMD == tc.cid)
 	{
-		(*iter)->handle_quot(qi);
+		dce_orders_[0].LocalOrderNo = dce_local_no_gen_++;
+		return dce_th_.ReqTraderInsertOrders(NULL, dce_orders_);
 	}
-}
+	else if (ATP_CANCEL_CMD == tc.cid)
+	{
+		dce_cancel_.LocalOrderNo = dce_local_no_gen_++;
+		return dce_th_.ReqTraderCancelOrder(NULL, dce_cancel_);
+	}
+	else
+	{
+		SU_ASSERT(false);
+	}
 
-int_fast32_t shared::async_send_command(struct order_info& oi)
-{
-
-
-	return 0;
+	return SU_EC_SUC;
 }
 
 
@@ -51,14 +60,6 @@ void shared::exec()
 //
 //	///check quot conn
 //	dqh_.check_conn();
-}
-
-void shared::handle_x()
-{
-}
-
-void shared::handle_res()
-{
 }
 
 int_fast32_t shared::init(const string_t cf)
@@ -155,7 +156,7 @@ int_fast32_t shared::init(const string_t cf)
 
 	console_logger_->debug("json 1: {0}", j["x"]);
 
-	return RET_SUC;
+	return SU_EC_SUC;
 }
 
 
@@ -172,7 +173,23 @@ int_fast32_t algo_engine::reg_algo(algo_base::pointer_t& algos,
 
 int_fast32_t algo_engine::run_and_wait()
 {
+	SHARED().run_and_wait();
 	return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+int_fast32_t algo_base::async_send_cmd(trade_cmd_t &tc)
+{
+	////
+	return SHARED().async_send_command(tc);
+}
+
+int_fast32_t shared::run_and_wait()
+{
+
+
+
+	return SU_EC_SUC;
 }
 
 } /* namespace qtp_bl */

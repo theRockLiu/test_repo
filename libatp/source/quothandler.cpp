@@ -46,10 +46,10 @@ int dce_quot_handler::onMarketDataMBLQuot(UINT4 nSeqNo,
 		const _fldBestQuot& bestquot, CAPIVector<_fldOptPara>& lstOptPara,
 		CAPIVector<_fldMBLQuot>& lstMBLQuot, BYTE bChainFlag)
 {
-	ASSERT(CHAIN_SINGLE == bChainFlag);
+	SU_ASSERT(CHAIN_SINGLE == bChainFlag);
 
 	struct quot_info qi;// = {.cid = utils::hash_str(bestquot.ContractID.GetBuf())};
-	SHARED_OBJ().handle_quot(qi);
+	SHARED().handle_quot(qi);
 
 	return 0;
 }
