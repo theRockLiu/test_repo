@@ -29,7 +29,7 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.280853942" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1613239866" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libsmart_utils}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libatp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libsmart_atp}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1573311386" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++1y" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1867407640" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -37,7 +37,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1206700379" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.2094881029" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option id="gnu.cpp.link.option.libs.379085800" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="atp"/>
+									<listOptionValue builtIn="false" value="smart_atp"/>
 									<listOptionValue builtIn="false" value="smart_utils"/>
 									<listOptionValue builtIn="false" value="quotapi64"/>
 									<listOptionValue builtIn="false" value="tradeapi64"/>
@@ -46,9 +46,9 @@
 								</option>
 								<option id="gnu.cpp.link.option.paths.1525418569" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libsmart_utils/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libatp/apis/dce/Linux/quot/lib}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libatp/apis/dce/Linux/trade/lib}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libatp/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libsmart_atp/apis/dce/Linux/quot/lib}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libsmart_atp/apis/dce/Linux/trade/lib}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libsmart_atp/Debug}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.952706892" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

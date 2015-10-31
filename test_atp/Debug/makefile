@@ -44,7 +44,7 @@ all: test_atp
 test_atp: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -L"/home/rock/github/test_repo/libsmart_utils/Debug" -L"/home/rock/github/test_repo/libatp/apis/dce/Linux/quot/lib" -L"/home/rock/github/test_repo/libatp/apis/dce/Linux/trade/lib" -L"/home/rock/github/test_repo/libatp/Debug" -o "test_atp" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/rock/github/test_repo/libsmart_utils/Debug" -L"/home/rock/github/test_repo/libsmart_atp/apis/dce/Linux/quot/lib" -L"/home/rock/github/test_repo/libsmart_atp/apis/dce/Linux/trade/lib" -L"/home/rock/github/test_repo/libsmart_atp/Debug" -o "test_atp" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
