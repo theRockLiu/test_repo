@@ -12,10 +12,16 @@
 #include <cassert> ///for c++ assert
 
 #ifdef NDEBUG
-#define SU_ASSERT(expr) assert(expr); ///to do ...
+#define SU_CHECK(expr) assert(expr); ///to do ...
 #else
-#define SU_ASSERT(expr) assert(expr);
+#define SU_CHECK(expr) assert(expr);
 #endif
+
+#define SU_CHECK_FAIL_RET(expr, ret) \
+	if (!(expr)) \
+	{\
+		return ret; \
+	}
 
 #define DISABLE_CONSTRUCT_AND_DESTRUCT(class_name) \
 	class_name () = delete; \

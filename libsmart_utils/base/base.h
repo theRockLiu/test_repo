@@ -28,10 +28,11 @@
 
 namespace smart_utils
 {
-	enum error_code : int8_t
+enum
+	: int8_t
 	{
 		SU_EC_SUC = 0, SU_EC_ERR = -1, SU_EC_REDO_ERR = -2
-	};
+};
 }
 #endif /* COMMON_COMMON_H_ */
 

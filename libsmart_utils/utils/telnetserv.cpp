@@ -222,7 +222,7 @@ void pc(UNUSED(struct cli_def *cli_), const char *string)
 int_fast32_t telnet_serv::run()
 {
 	struct cli_command *c;
-	int s, x;
+	int x;
 	struct sockaddr_in addr;
 	int on = 1;
 

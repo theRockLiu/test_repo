@@ -88,7 +88,7 @@ namespace smart_utils
 		inline void inc_out_idx(uint64_t cnt) {smp_wmb(); out_idx_ += cnt;}
 
 	private:
-		//alignas(__CLS__)
+		//alignas(__CLS__)c
 		uint64_t in_idx_ __attribute__((aligned(__CLS__)));
 		uint64_t out_idx_;
 		byte_t *rb_;

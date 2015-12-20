@@ -7,7 +7,7 @@
 
 #include "quothandler.h"
 
-namespace atp
+namespace satp
 {
 
 } /* namespace qtp_bl */

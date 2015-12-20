@@ -35,7 +35,7 @@ void notifier_engine::async_add_notifier(notifier::pointer_t& pEvtHandler)
 	std::lock_guard < std::mutex > lock(tmp_notifier_add_mtx_);
 	if (!is_opened())
 	{
-		SU_ASSERT(false)
+		SU_CHECK(false)
 		return;
 	}
 	tmp_add_notifiers_.push_back(pEvtHandler);
@@ -46,7 +46,7 @@ void notifier_engine::async_remove_notifier(notifier::pointer_t& pEvtHandler)
 	std::lock_guard < std::mutex > lock(tmp_notifier_remove_mtx_);
 	if (!is_opened())
 	{
-		SU_ASSERT(false)
+		SU_CHECK(false)
 		return;
 	}
 	tmp_remove_notifiers_.push_back(pEvtHandler);
@@ -57,7 +57,7 @@ void notifier_engine::check_once(int32_t TimeoutMS)
 {
 	if (!is_opened())
 	{
-		SU_ASSERT(false)
+		SU_CHECK(false)
 		return;
 	}
 
@@ -69,7 +69,7 @@ void notifier_engine::check_once(int32_t TimeoutMS)
 			std::lock_guard < std::mutex > lock(tmp_notifier_remove_mtx_);
 			tmp_remove_notifiers_.swap(TmpVec);
 		}
-		SU_ASSERT(tmp_remove_notifiers_.empty())
+		SU_CHECK(tmp_remove_notifiers_.empty())
 
 		for (tmp_notifiers_t::iterator iter = TmpVec.begin();
 				iter != TmpVec.end(); iter++)
@@ -78,7 +78,7 @@ void notifier_engine::check_once(int32_t TimeoutMS)
 			///Since Linux 2.6.9, event can be specified as NULL when using EPOLL_CTL_DEL.  Applications that need to be portable to kernels before  2.6.9
 			///should specify a non-null pointer in event.
 			notifiers_t::size_type st = notifiers_.erase(*iter);
-			SU_ASSERT(1 == st)
+			SU_CHECK(1 == st)
 			(*iter)->on_removed(
 					0 == st ?
 							false :
@@ -95,14 +95,14 @@ void notifier_engine::check_once(int32_t TimeoutMS)
 			std::lock_guard < std::mutex > lock(tmp_notifier_add_mtx_);
 			tmp_add_notifiers_.swap(tmp_add_notifiers);
 		}
-		SU_ASSERT(tmp_add_notifiers_.empty())
+		SU_CHECK(tmp_add_notifiers_.empty())
 
 		for (tmp_notifiers_t::iterator iter = tmp_add_notifiers.begin();
 				iter != tmp_add_notifiers.end(); iter++)
 		{
 			std::pair<notifiers_t::iterator, bool> ret = notifiers_.insert(
 					*iter);
-			SU_ASSERT(ret.second)
+			SU_CHECK(ret.second)
 			struct epoll_event evt =
 			{ (*iter)->get_events(),
 			{ (*iter).get() }, };
@@ -119,14 +119,14 @@ void notifier_engine::check_once(int32_t TimeoutMS)
 	int32_t nfds = epoll_wait(epfd_, events, MAX_EVENTS, TimeoutMS);
 	if (nfds == -1)
 	{
-		SU_ASSERT(false)
+		SU_CHECK(false)
 		return;
 	}
 
 	for (int32_t n = 0; n < nfds; ++n)
 	{
 		notifier* pHandler = static_cast<notifier*>(events[n].data.ptr);
-		SU_ASSERT(NULL != pHandler)
+		SU_CHECK(NULL != pHandler)
 		pHandler->handle_events(events[n].events);
 	}
 
@@ -154,7 +154,7 @@ timer_base::~timer_base()
 int32_t timer_base::open()
 {
 
-	SU_ASSERT(
+	SU_CHECK(
 			init_expire_ns_ < NANOS_OF_ONE_SECONDS
 					&& interval_ns_ < NANOS_OF_ONE_SECONDS);
 
@@ -204,7 +204,7 @@ int32_t timer_base::open()
 
 int32_t timer_base::close()
 {
-	SU_ASSERT(-1 == fd_)
+	SU_CHECK(-1 == fd_)
 	::close(fd_);
 	fd_ = -1;
 
@@ -218,13 +218,13 @@ uint32_t timer_base::get_events()
 
 void timer_base::handle_events(uint32_t events)
 {
-	SU_ASSERT(EPOLLIN == events)
+	SU_CHECK(EPOLLIN == events)
 
 	uint64_t times = 0;
 	ssize_t s = read(fd_, &times, sizeof(uint64_t));
 	if (s != sizeof(uint64_t))
 	{
-		SU_ASSERT(false);
+		SU_CHECK(false);
 		return;
 	}
 
@@ -241,7 +241,7 @@ int32_t notifier_engine::open()
 		return SU_EC_REDO_ERR;
 	}
 
-	SU_ASSERT(
+	SU_CHECK(
 			tmp_add_notifiers_.empty() && tmp_remove_notifiers_.empty()
 					&& notifiers_.empty())
 	/*
@@ -318,13 +318,13 @@ void event_base::notify(uint64_t val)
 
 void event_base::handle_events(uint32_t evts)
 {
-	SU_ASSERT(EPOLLIN == evts)
+	SU_CHECK(EPOLLIN == evts)
 
 	uint64_t val = 0;
 	ssize_t s = read(fd_, &val, sizeof(uint64_t));
 	if (s != sizeof(uint64_t))
 	{
-		SU_ASSERT(false);
+		SU_CHECK(false);
 		return;
 	}
 
@@ -344,7 +344,7 @@ int32_t signal_base::open()
 {
 	sigset_t mask;
 	sigemptyset(&mask);
-	SU_ASSERT(!signals_.empty())
+	SU_CHECK(!signals_.empty())
 	for (std::vector<int32_t>::iterator iter = signals_.begin();
 			iter != signals_.end(); iter++)
 	{
@@ -354,14 +354,14 @@ int32_t signal_base::open()
 
 	if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1)
 	{
-		SU_ASSERT(false);
+		SU_CHECK(false);
 		return SU_EC_ERR;
 	}
 
 	fd_ = signalfd(-1, &mask, SFD_NONBLOCK);
 	if (fd_ == -1)
 	{
-		SU_ASSERT(false);
+		SU_CHECK(false);
 		return SU_EC_ERR;
 	}
 
@@ -390,7 +390,7 @@ void signal_base::handle_events(uint32_t evts)
 		s = read(fd_, &fdsi, sizeof(struct signalfd_siginfo));
 		if (s != sizeof(struct signalfd_siginfo))
 		{
-			SU_ASSERT(EAGAIN == errno)
+			SU_CHECK(EAGAIN == errno)
 			break;
 		}
 
@@ -435,12 +435,12 @@ int32_t tcp_sock_accepter::close()
 
 void tcp_sock_accepter::on_added(bool Suc)
 {
-	SU_ASSERT(Suc);
+	SU_CHECK(Suc);
 }
 
 void tcp_sock_accepter::on_removed(bool Suc)
 {
-	SU_ASSERT(Suc);
+	SU_CHECK(Suc);
 }
 
 int32_t tcp_sock_accepter::get_fd()
@@ -466,7 +466,7 @@ tcp_sock_accepter::~tcp_sock_accepter()
 
 void tcp_sock_accepter::handle_events(uint32_t evts)
 {
-	SU_ASSERT(EPOLLIN == evts);
+	SU_CHECK(EPOLLIN == evts);
 	sockaddr_in addr =
 	{ 0 };
 	socklen_t len = sizeof(addr);
@@ -489,7 +489,7 @@ tcp_sock::~tcp_sock()
 
 int32_t tcp_sock::open()
 {
-	SU_ASSERT(sock_ >= 0);
+	SU_CHECK(sock_ >= 0);
 
 	return 0;
 }
@@ -503,12 +503,12 @@ int32_t tcp_sock::close()
 
 void tcp_sock::on_added(bool Suc)
 {
-	SU_ASSERT(Suc);
+	SU_CHECK(Suc);
 }
 
 void tcp_sock::on_removed(bool Suc)
 {
-	SU_ASSERT(Suc);
+	SU_CHECK(Suc);
 }
 
 int32_t tcp_sock::get_fd()
@@ -523,7 +523,7 @@ uint32_t tcp_sock::get_events()
 
 void tcp_sock::handle_events(uint32_t evts)
 {
-	SU_ASSERT(EPOLLIN == evts);
+	SU_CHECK(EPOLLIN == evts);
 	///TheRock: very ugly, but u know i will todo it.
 	int_fast32_t ret = recv(sock_, recv_buf_ + data_offset_,
 			MAX_RECV_BUF_SIZE - data_offset_ - data_len_, 0);

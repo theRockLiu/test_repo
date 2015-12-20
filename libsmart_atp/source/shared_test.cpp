@@ -7,7 +7,7 @@
 
 #include "shared.h"
 
-namespace atp
+namespace satp
 {
 
 } /* namespace qtp_bl */

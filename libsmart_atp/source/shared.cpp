@@ -7,6 +7,7 @@
 
 
 #include <fstream>
+#include <memory>
 #include <json/json/src/json.hpp>
 using json = nlohmann::json;
 #include <base/base.h>
@@ -14,10 +15,12 @@ using namespace smart_utils;
 
 #include "../include/atp.h"
 #include "shared.h"
+#include "quothandler.h"
+#include "tradehandler.h"
 
 
 
-namespace atp
+namespace satp
 {
 
 shared::shared()
@@ -31,25 +34,25 @@ shared::~shared()
 	// TODO Auto-generated destructor stub
 }
 
-int_fast32_t shared::async_send_command(trade_cmd_t& tc)
-{
-	if (ATP_ORDER_CMD == tc.cid)
-	{
-		dce_orders_[0].LocalOrderNo = dce_local_no_gen_++;
-		return dce_th_.ReqTraderInsertOrders(NULL, dce_orders_);
-	}
-	else if (ATP_CANCEL_CMD == tc.cid)
-	{
-		dce_cancel_.LocalOrderNo = dce_local_no_gen_++;
-		return dce_th_.ReqTraderCancelOrder(NULL, dce_cancel_);
-	}
-	else
-	{
-		SU_ASSERT(false);
-	}
-
-	return SU_EC_SUC;
-}
+//int_fast32_t shared::async_send_command(trade_cmd_t& tc)
+//{
+//	if (ATP_ORDER_CMD == tc.cid)
+//	{
+//		dce_orders_[0].LocalOrderNo = dce_local_no_gen_++;
+//		return dce_th_.ReqTraderInsertOrders(NULL, dce_orders_);
+//	}
+//	else if (ATP_CANCEL_CMD == tc.cid)
+//	{
+//		dce_cancel_.LocalOrderNo = dce_local_no_gen_++;
+//		return dce_th_.ReqTraderCancelOrder(NULL, dce_cancel_);
+//	}
+//	else
+//	{
+//		SU_CHECK(false);
+//	}
+//
+//	return SU_EC_SUC;
+//}
 
 
 
@@ -160,28 +163,28 @@ int_fast32_t shared::init(const string_t cf)
 }
 
 
-int_fast32_t algo_engine::init()
+int_fast32_t algo_trade_platform::init()
 {
 	return 0;
 }
 
-int_fast32_t algo_engine::reg_algo(algo_base::pointer_t& algos,
-		std::vector<std::string>& contract_ids)
-{
-	return 0;
-}
+//int_fast32_t algo_trade_platform::reg_algo(algo_base::pointer_t& algos,
+//		std::vector<std::string>& contract_ids)
+//{
+//	return 0;
+//}
 
-int_fast32_t algo_engine::run_and_wait()
-{
-	return SHARED().run_and_wait();
-}
+//int_fast32_t algo_trade_platform::run_and_wait()
+//{
+//	return SHARED().run_and_wait();
+//}
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-int_fast32_t algo_base::async_send_cmd(trade_cmd_t &tc)
-{
-	////
-	return SHARED().async_send_command(tc);
-}
+////////////////////////////////////////////////////////////////////////////////////////////////
+//int_fast32_t algo_base::async_send_cmd(trade_cmd_t &tc)
+//{
+//	////
+//	return SHARED().async_send_command(tc);
+//}
 
 int_fast32_t shared::run_and_wait()
 {
@@ -200,8 +203,49 @@ void check_conn_timer::handle_timeout(uint64_t times)
 
 void shared::handle_timeout(uint64_t times)
 {
-	dce_th_.check_conn();
-	dce_qh_.check_conn();
+//	dce_th_.check_conn();
+//	dce_qh_.check_conn();
+}
+
+quot_engine::pointer_t algo_trade_platform::create_quot_engine(exc_info_t& ei)
+{
+	quot_engine::pointer_t ptr = nullptr;
+	switch (ei.id_)
+	{
+		case satp::exchanges::EX_DCE:
+		{
+			ptr = std::make_shared<satp::dce_quot_engine>();
+			if (ec_suc != ptr->init(ei))
+			{
+				ptr = nullptr;
+			}
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	return ptr;
+}
+
+trade_engine::pointer_t algo_trade_platform::create_trade_engine(exc_info_t& ei)
+{
+	trade_engine::pointer_t ptr = nullptr;
+	switch (ei.id_)
+	{
+		case satp::exchanges::EX_DCE:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	return ptr;
 }
 
 } /* namespace qtp_bl */

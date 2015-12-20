@@ -13,7 +13,7 @@ using namespace std;
 #include <base/defines.h>
 #include <include/atp.h>
 
-using namespace atp;
+using namespace satp;
 
 typedef struct order_cmd
 {
@@ -29,7 +29,7 @@ typedef struct price_level_info
 } pli_t;
 
 
-class myalgo: public atp::algo_base
+class myalgo: public satp::algo_base
 {
 public:
 	void handle_quot(quot_info_t& qi)
@@ -50,7 +50,7 @@ public:
 		}
 		else
 		{
-			SU_ASSERT(false);
+			SU_CHECK(false);
 		}
 	}
 
@@ -65,12 +65,24 @@ private:
 
 int main()
 {
-	atp::algo_engine ae;
-	ae.init();
+	bool flag = true;
 
-	atp::algo_base::pointer_t p = make_shared<myalgo>();
-	std::vector<std::string> vec = {"test"};
-	ae.reg_algo(p, vec);
-	return ae.run_and_wait();
+	satp::algo_trade_platform ap;
+	ap.init();
+
+	satp::quot_engine::pointer_t qe = ap.create_quot_engine(satp::exchanges::DCE);
+	satp::trade_engine::pointer_t te = ap.create_trade_engine(satp::exchanges::DCE);
+
+	ap.start();
+	while(flag)
+	{
+		evt_t *evt = (evt_t*)qe.get_data();
+		///TODO: .....
+		evt_t *evt = (evt_t*)te.get_data();
+		///TODO:.....
+		///te.async_send_cmd(...);
+	}
+	ap.stop();
+
 }
 

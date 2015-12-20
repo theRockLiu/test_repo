@@ -8,19 +8,31 @@
 #ifndef QUOTHANDLER_H_
 #define QUOTHANDLER_H_
 
+#include <vector>
+
+#include <base/base.h>
+using namespace smart_utils;
+
 #include "../apis/dce/Linux/quot/lib/QuotAPI.h"
+#include "../include/atp.h"
+#include "../include/data.h"
 
-namespace atp
+namespace satp
 {
 
-class dce_quot_handler: public CQuotAPI
+class dce_quot_engine: public CQuotAPI, public quot_engine
 {
 public:
-	dce_quot_handler();
-	virtual ~dce_quot_handler();
+	dce_quot_engine();
+	virtual ~dce_quot_engine();
 
 public:
-	void check_conn();
+	int_fast8_t init(exc_info_t&){return ec_suc;}
+	byte_t* get_data(){return NULL;}
+	void check_conn(const std::vector<addr_info_t> &lb_gws,
+			const std::vector<addr_info_t> &gws, const string_t &member_id,
+			const string_t &trader_no, const string_t &passwd,
+			const string_t &prog_id, const string_t &prog_ver);
 //	virtual int onRspTraderPwdUpd(UINT4 nSeqNo, const _fldRspMsg & rspmsg,
 //			const _fldTraderPwdUpdReq & traderpwdupdreq, BYTE bChainFlag =
 //			CHAIN_SINGLE);
@@ -62,6 +74,10 @@ public:
 	virtual int onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo,
 			WORD nFieldCount, WORD nFieldsLen, const char *pAddr);
 	virtual void onChannelLost(const char *szErrMsg);
+
+private:
+	bool init_;
+	volatile bool conn_ok_;
 };
 
 } /* namespace qtp_bl */

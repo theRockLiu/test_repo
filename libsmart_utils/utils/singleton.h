@@ -54,7 +54,7 @@ private:
 		dummy()
 		{
 			singleton<T>::x_ = new T;
-			SU_ASSERT(nullptr != singleton<T>::x_);
+			SU_CHECK(nullptr != singleton<T>::x_);
 		}
 	};
 
