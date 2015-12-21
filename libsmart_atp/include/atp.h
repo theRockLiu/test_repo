@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+#include <base/types.h>
 #include "../include/data.h"
 
 namespace satp
@@ -85,7 +86,9 @@ namespace satp
 			~algo_trade_platform(){}
 
 		public:
-			int_fast32_t init();
+			int_fast8_t init();
+			int_fast8_t start(){}
+			int_fast8_t stop(){}
 			quot_engine::pointer_t create_quot_engine(exc_info_t &ei);
 			trade_engine::pointer_t create_trade_engine(exc_info_t &ei);
 	};

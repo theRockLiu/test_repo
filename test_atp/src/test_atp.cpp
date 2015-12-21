@@ -29,39 +29,39 @@ typedef struct price_level_info
 } pli_t;
 
 
-class myalgo: public satp::algo_base
-{
-public:
-	void handle_quot(quot_info_t& qi)
-	{
-
-	}
-
-	void handle_cmd_res(trade_cmd_res_t& cr)
-	{
-		if (ATP_ORDER_CMD == cr.type)
-		{
-			//price_vec[cr.pl].
-
-		}
-		else if (ATP_CANCEL_CMD == cr.type)
-		{
-
-		}
-		else
-		{
-			SU_CHECK(false);
-		}
-	}
-
-	void handle_match_res(match_res_t &)
-	{
-
-	}
-
-private:
-	std::vector<pli_t> price_vec;
-};
+//class myalgo: public satp::algo_base
+//{
+//public:
+//	void handle_quot(quot_info_t& qi)
+//	{
+//
+//	}
+//
+//	void handle_cmd_res(trade_cmd_res_t& cr)
+//	{
+//		if (ATP_ORDER_CMD == cr.type)
+//		{
+//			//price_vec[cr.pl].
+//
+//		}
+//		else if (ATP_CANCEL_CMD == cr.type)
+//		{
+//
+//		}
+//		else
+//		{
+//			SU_CHECK(false);
+//		}
+//	}
+//
+//	void handle_match_res(match_res_t &)
+//	{
+//
+//	}
+//
+//private:
+//	std::vector<pli_t> price_vec;
+//};
 
 int main()
 {
@@ -70,15 +70,16 @@ int main()
 	satp::algo_trade_platform ap;
 	ap.init();
 
-	satp::quot_engine::pointer_t qe = ap.create_quot_engine(satp::exchanges::DCE);
-	satp::trade_engine::pointer_t te = ap.create_trade_engine(satp::exchanges::DCE);
+	satp::exc_info_t x;
+	satp::quot_engine::pointer_t qe = ap.create_quot_engine(x);
+	satp::trade_engine::pointer_t te = ap.create_trade_engine(x);
 
 	ap.start();
 	while(flag)
 	{
-		evt_t *evt = (evt_t*)qe.get_data();
+		evt_t *evt = (evt_t*)qe->get_data();
 		///TODO: .....
-		evt_t *evt = (evt_t*)te.get_data();
+		evt_t *evt1 = (evt_t*)te->get_data();
 		///TODO:.....
 		///te.async_send_cmd(...);
 	}

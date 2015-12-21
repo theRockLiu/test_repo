@@ -24,6 +24,7 @@ public:
 
 public:
 	///trade api
+	int_fast8_t init(){}
 	void check_conn();
 	virtual int onRspTraderInsertOrders(UINT4 nSeqNo,const _fldRspMsg & rspmsg,CAPIVector<_fldOrder> & lstOrder,BYTE bChainFlag=CHAIN_SINGLE);
 	virtual int onRspTraderCancelOrder(UINT4 nSeqNo,const _fldRspMsg & rspmsg,const _fldOrderAction & orderaction,BYTE bChainFlag=CHAIN_SINGLE);

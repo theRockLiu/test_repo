@@ -163,7 +163,7 @@ int_fast32_t shared::init(const string_t cf)
 }
 
 
-int_fast32_t algo_trade_platform::init()
+int_fast8_t algo_trade_platform::init()
 {
 	return 0;
 }
