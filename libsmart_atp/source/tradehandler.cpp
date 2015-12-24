@@ -13,7 +13,7 @@ namespace satp
 {
 
 	dce_trade_engine::dce_trade_engine()
-	: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0)
+											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0)
 	{
 		// TODO Auto-generated constructor stub
 
@@ -149,6 +149,92 @@ namespace satp
 	int dce_trade_engine::onNtyTraderMatch(UINT4 nSeqNo, const _fldMatch& match, BYTE bChainFlag)
 	{
 		return 0;
+	}
+
+	int_fast8_t dce_trade_engine::init(exc_info_t& ei)
+	{
+	}
+
+	evt_t* dce_trade_engine::get_evt()
+	{
+	}
+
+	int_fast8_t dce_trade_engine::async_send_cmd(cmd_t& cmd)
+	{
+	}
+
+	void dce_trade_engine::handle_timeout(uint64_t times)
+	{
+		static class temp
+		{
+			public:
+				temp(bool is_logged)
+				{
+					SU_ASSERT(0 == InitAPI(is_logged, NULL));
+				}
+		} x(is_logged_);
+
+		if (CONN_OPENED == SUAO(conn_state_))
+		{
+			return;
+		}
+
+		int32_t ret = InitCA(0, "", "", "", "", false);
+		if (0 != ret)
+		{
+			LOGGER()->error("init ca failed: %d!\n", ret);
+			return;
+		}
+
+		for (auto x : fens_addrs_)
+		{
+			RegisterFens(x.ip.c_str(), x.port);
+		}
+		for (auto x : gw_addrs_)
+		{
+			SetService(x.ip.c_str(), x.port);
+		}
+
+		ret = ConnectByFens();
+		if (0 != ret)
+		{
+			ret = Connect();
+			if (0 != ret)
+			{
+				LOGGER()->error("connect to trade sys failed: %d!\n", ret);
+				return;
+			}
+		}
+
+		_fldTraderSessionReq session_req;
+		_fldRspMsg rsp;
+		_fldTraderSessionRsp session_rsp;
+		strncpy(session_req.MemberID.buf, member_id_.c_str(), session_req.MemberID.Length() - 1);
+		strncpy(session_req.TraderNo.buf, trader_no_.c_str(), session_req.TraderNo.Length() - 1);
+		session_req.IsShortCert = '0';
+		strncpy(session_req.ProgramID.buf, program_id_.c_str(), session_req.ProgramID.Length() - 1);               //V1.0.8.0
+		strncpy(session_req.ProgramVer.buf, program_ver_.c_str(), session_req.ProgramVer.Length() - 1);               //V1.0.8.0
+		ret = TraderSession(&session_req, (char *) passwd_.c_str(), &rsp, &session_rsp);
+		if (0 != ret)
+		{
+			LOGGER()->error("trader session failed: %d!\n", ret);
+			return;
+		}
+
+		_fldTraderLoginReq loginreq;
+		strncpy(loginreq.MemberID.buf, member_id_.c_str(), loginreq.MemberID.Length() - 1);
+		strncpy(loginreq.TraderNo.buf, trader_no_.c_str(), loginreq.TraderNo.Length() - 1);
+		strncpy(loginreq.Pwd.buf, passwd_.c_str(), loginreq.Pwd.Length() - 1);
+		strncpy(loginreq.AppName.buf, program_id_.c_str(), loginreq.AppName.Length() - 1);   //V1.0.8.0
+		strncpy(loginreq.AppVersion.buf, program_ver_.c_str(), loginreq.AppVersion.Length() - 1);   //V1.0.8.0
+		ret = Login(&loginreq, &rsp, &loginrsp_);
+		if (0 != ret)
+		{
+			LOGGER()->error("login trade sys failed: %d\n", ret);
+			return;
+		}
+
+		conn_state_ = CONN_OPENED;
 	}
 
 } /* namespace qtp_bl */

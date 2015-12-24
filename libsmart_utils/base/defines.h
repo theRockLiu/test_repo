@@ -44,9 +44,20 @@
 
 #define __CLS__ (64)
 
-#define smp_wmb() asm __volatile__("" ::: "memory")
+//#define smp_wmb() asm __volatile__("" ::: "memory")
 
 #define __MEM_PAGE_SIZE__ (4096)
+
+
+#define min(x, y) ({				\
+	typeof(x) _min1 = (x);			\
+	typeof(y) _min2 = (y);			\
+	(void) (&_min1 == &_min2);		\
+	_min1 < _min2 ? _min1 : _min2; })
+
+/* The "volatile" is due to gcc bugs */
+#define smp_wmb() __asm__ __volatile__("": : :"memory")
+#define SUAO(x) (*(volatile typeof(x) *)&(x))
 
 
 #endif /* UTILS_DEFINES_H_ */
