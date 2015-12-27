@@ -1,113 +1,127 @@
+#include <sys/mman.h>
+#include <stdlib.h>
+
 #include "llrbex.h"
 
-/*
- * internal helper to calculate the unused elements in a fifo
- */
-static inline uint32_t rb_unused(struct smart_llrb *fifo)
+using namespace smart_utils;
+
+//namespace
+//{
+//	inline uint32_t rb_unused(struct smart_llrb *rb)
+//	{
+//		return (rb->mask_ + 1) - (rb->in_ - SU_AO(rb->out_));
+//	}
+//}
+
+//uint64_t smart_llrb::writer_unused_bytes()
+//{
+//	return (mask_ + 1) - (in_ - SU_AO(out_));
+//}
+
+int_fast8_t smart_llrb::init(uint64_t sz, uint32_t esz)
 {
-	return (fifo->mask + 1) - (fifo->in - SUAO(fifo->out));
-}
-
-int rb_alloc(struct smart_llrb *fifo, uint32_t size, uint32_t esize)
-{
-	/*
-	 * round down to the next power of 2, since our 'let the indices
-	 * wrap' technique works only in this case.
-	 */
-	size = roundup_pow_of_two(size);
-
-	fifo->in = 0;
-	fifo->out = 0;
-	fifo->esize = esize;
-
-	if (size < 2)
+	if (sz < 2)
 	{
-		fifo->data = NULL;
-		fifo->mask = 0;
 		return -1;
 	}
 
-	fifo->data = malloc(size * esize);
-
-	if (!fifo->data)
+	sz = ROUND_UP(sz, HUGE_PAGE_SIZE);
+	SU_ASSERT(0 == (sz & (sz - 1)));
+	SU_ASSERT(0 == sz/esz);
+	bytes_ = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB, -1, 0);
+	flag_ = false;
+	if (bytes_ == MAP_FAILED)
 	{
-		fifo->mask = 0;
-		return -2;
+		/* Allocate huge-page-aligned memory to give best chance of allocating
+		 * transparent huge-pages.
+		 */
+		flag_ = true;
+		SU_ASSERT(0 == posix_memalign((void**) &bytes_, HUGE_PAGE_SIZE, sz));
 	}
-	fifo->mask = size - 1;
-
-	smp_wmb();
+	in_ = 0;
+	out_ = 0;
+	mask_ = sz - 1;
+	esize_ = esz;
 
 	return 0;
 }
 
-void rb_free(struct smart_llrb *fifo)
+int_fast8_t smart_llrb::destroy()
 {
-	free(fifo->data);
-	fifo->in = 0;
-	fifo->out = 0;
-	fifo->esize = 0;
-	fifo->data = NULL;
-	fifo->mask = 0;
-
-	smp_wmb();
-}
-
-int rb_init(struct smart_llrb *fifo, void *buffer, uint32_t size, uint32_t esize)
-{
-	size /= esize;
-
-	size = roundup_pow_of_two(size);
-
-	fifo->in = 0;
-	fifo->out = 0;
-	fifo->esize = esize;
-	fifo->data = buffer;
-
-	if (size < 2)
+	if (!flag_)
 	{
-		fifo->mask = 0;
-		return -1;
+		munmap(bytes_, mask_ + 1);
 	}
-	fifo->mask = size - 1;
+	else
+	{
+		free(bytes_);
+	}
 
-	smp_wmb();
+	bytes_ = NULL;
+	in_ = 0;
+	out_ = 0;
+	mask_ = 0;
+	esize_ = 0;
 
 	return 0;
 }
+//
+//byte_t* smart_llrb::writer_get_bytes(uint32_t cnt)
+//{
+//	uint64_t bytes = cnt * esize_;
+//	if (writer_unused_bytes() < bytes)
+//	{
+//		return NULL;
+//	}
+//	uint64_t in = in_ & mask_;
+//	uint64_t out = SU_AO(out_) & mask_;
+//	if ((in > out) && (mask_ + 1 - in) < bytes)
+//	{
+//		return NULL;
+//	}
+//
+//	smp_wmb();
+//
+//	return (bytes_ + in);
+//}
+//
+//void smart_llrb::writer_commit_bytes(uint32_t cnt)
+//{
+//	SU_AO(in_) += (cnt * esize_);
+//}
 
-static void rb_writer_copy_in(struct smart_llrb *rb, const void *src, uint32_t len, uint32_t offset)
-{
-	uint32_t size = rb->mask + 1;
-
-	offset &= rb->mask;
-	if (rb->esize != 1)
-	{
-		offset *= rb->esize;
-		size *= rb->esize;
-		len *= rb->esize;
-	}
-	uint32_t l = min(len, size - offset);
-
-	memcpy(rb->data + offset, src, l);
-	memcpy(rb->data, src + l, len - l);
-	/*
-	 * make sure that the data in the fifo is up to date before
-	 * incrementing the fifo->in index counter
-	 */
-	smp_wmb();
-}
-
-uint32_t rb_writer_in(struct smart_llrb *rb, const void *buf, uint32_t len)
-{
-	uint32_t l = rb_unused(rb);
-	if (len > l)
-		len = l;
-
-	rb_writer_copy_in(rb, buf, len, rb->in);
-	SUAO(rb->in) += len;
-	return len;
-}
+//byte_t* writer_copy_in(struct smart_llrb *rb, const void *src, uint32_t len, uint32_t offset)
+//{
+//	uint32_t size = rb->mask + 1;
+//
+//	offset &= rb->mask;
+//	if (rb->esize != 1)
+//	{
+//		offset *= rb->esize;
+//		size *= rb->esize;
+//		len *= rb->esize;
+//	}
+//	uint32_t l = min(len, size - offset);
+//
+//	memcpy(rb->data + offset, src, l);
+//	memcpy(rb->data, src + l, len - l);
+//	/*
+//	 * make sure that the data in the fifo is up to date before
+//	 * incrementing the fifo->in index counter
+//	 */
+//	smp_wmb();
+//}
+//
+//uint32_t rb_writer_in(struct smart_llrb *rb, const void *buf, uint32_t len)
+//{
+//	uint32_t l = rb_unused(rb);
+//	if (len > l)
+//		len = l;
+//
+//	rb_writer_copy_in(rb, buf, len, rb->in);
+//	SU_AO(rb->in) += len;
+//	return len;
+//}
 
 static void rb_reader_copy_out(struct smart_llrb *fifo, void *dst, uint32_t len, uint32_t offset)
 {
@@ -133,7 +147,7 @@ static void rb_reader_copy_out(struct smart_llrb *fifo, void *dst, uint32_t len,
 
 uint32_t rb_reader_out_peek(struct smart_llrb *fifo, void *buf, uint32_t len)
 {
-	uint32_t l = SUAO(fifo->in) - fifo->out;
+	uint32_t l = SU_AO(fifo->in) - fifo->out;
 	if (len > l)
 		len = l;
 
@@ -144,7 +158,7 @@ uint32_t rb_reader_out_peek(struct smart_llrb *fifo, void *buf, uint32_t len)
 uint32_t rb_reader_out(struct smart_llrb *fifo, void *buf, uint32_t len)
 {
 	len = rb_reader_out_peek(fifo, buf, len);
-	SUAO(fifo->out) += len;
+	SU_AO(fifo->out) += len;
 	return len;
 }
 
@@ -194,7 +208,7 @@ uint32_t rb_writer_in_r(struct smart_llrb *fifo, const void *buf, uint32_t len, 
 	rb_writer_poke_n(fifo, len, recsize);
 
 	rb_writer_copy_in(fifo, buf, len, fifo->in + recsize);
-	SUAO(fifo->in) += len + recsize;
+	SU_AO(fifo->in) += len + recsize;
 	return len;
 }
 
@@ -211,7 +225,7 @@ static uint32_t rb_reader_out_copy_r(struct smart_llrb *fifo, void *buf, uint32_
 
 uint32_t rb_reader_out_peek_r(struct smart_llrb *fifo, void *buf, uint32_t len, uint32_t recsize)
 {
-	if (SUAO(fifo->in) == fifo->out)
+	if (SU_AO(fifo->in) == fifo->out)
 		return 0;
 
 	uint32_t n;
@@ -220,18 +234,18 @@ uint32_t rb_reader_out_peek_r(struct smart_llrb *fifo, void *buf, uint32_t len, 
 
 uint32_t rb_reader_out_r(struct smart_llrb *fifo, void *buf, uint32_t len, uint32_t recsize)
 {
-	if (SUAO(fifo->in) == fifo->out)
+	if (SU_AO(fifo->in) == fifo->out)
 		return 0;
 
 	uint32_t n;
 	len = rb_reader_out_copy_r(fifo, buf, len, recsize, &n);
-	SUAO(fifo->out) += n + recsize;
+	SU_AO(fifo->out) += n + recsize;
 	return len;
 }
 
 void rb_reader_skip_r(struct smart_llrb *fifo, uint32_t recsize)
 {
 	uint32_t n = rb_reader_peek_n(fifo, recsize);
-	SUAO(fifo->out) += n + recsize;
+	SU_AO(fifo->out) += n + recsize;
 }
 

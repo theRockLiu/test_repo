@@ -8,15 +8,135 @@
 #ifndef UTILS_LLRBEX_H_
 #define UTILS_LLRBEX_H_
 
-struct smart_llrb
+#include <stdlib.h>
+#include <sys/mman.h>
+#include "../base/base.h"
+
+namespace smart_utils
 {
-		uint64_t in;
-		uint64_t out;
-		uint64_t mask;
-		uint32_t esize;
-		void *data;
-} __attribute__ ((aligned (64)));
+	class smart_llrb
+	{
+		public:
+			smart_llrb()
+			{
+			}
+			~smart_llrb()
+			{
+			}
 
+		public:
+			int_fast8_t smart_llrb::init(uint64_t sz, uint32_t esz)
+			{
+				if (sz < 2)
+				{
+					return -1;
+				}
 
+				sz = ROUND_UP(sz, HUGE_PAGE_SIZE);
+				SU_ASSERT(0 == (sz & (sz - 1)));
+				SU_ASSERT(0 == sz / esz);
+				bytes_ = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB, -1, 0);
+				flag_ = false;
+				if (bytes_ == MAP_FAILED)
+				{
+					/* Allocate huge-page-aligned memory to give best chance of allocating
+					 * transparent huge-pages.
+					 */
+					flag_ = true;
+					SU_ASSERT(0 == posix_memalign((void**) &bytes_, HUGE_PAGE_SIZE, sz));
+				}
+				in_ = 0;
+				out_ = 0;
+				mask_ = sz - 1;
+				esize_ = esz;
+
+				return 0;
+			}
+
+			int_fast8_t smart_llrb::destroy()
+			{
+				if (!flag_)
+				{
+					munmap(bytes_, mask_ + 1);
+				}
+				else
+				{
+					free(bytes_);
+				}
+
+				bytes_ = NULL;
+				in_ = 0;
+				out_ = 0;
+				mask_ = 0;
+				esize_ = 0;
+
+				return 0;
+			}
+			///
+			inline uint64_t reader_unused_datas()
+			{
+				return (SU_AO(in_) - out_);
+
+			}
+			inline uint64_t writer_unused_bytes()
+			{
+				return (mask_ + 1) - (in_ - SU_AO(out_));
+			}
+			///
+			inline byte_t* writer_get_bytes(uint32_t cnt)
+			{
+				uint64_t bytes = cnt * esize_;
+				if (writer_unused_bytes() < bytes)
+				{
+					return NULL;
+				}
+				uint64_t in = in_ & mask_;
+				uint64_t out = SU_AO(out_) & mask_;
+				if ((in > out) && ((mask_ + 1 - in) < bytes))
+				{
+					return NULL;
+				}
+
+				return (bytes_ + in);
+			}
+			inline void writer_commit_bytes(uint32_t cnt)
+			{
+				smp_wmb();
+				SU_AO(in_) += (cnt * esize_);
+			}
+			////
+			inline byte_t* reader_get_data(uint32_t cnt)
+			{
+				uint64_t bytes = cnt * esize_;
+				if (reader_unused_datas() < bytes)
+				{
+					return NULL;
+				}
+
+				uint64_t in = in & mask_;
+				uint64_t out = out_ & mask_;
+				if ((out > in) && ((mask_ + 1 - out) < bytes))
+				{
+					return NULL;
+				}
+
+				return (bytes_ + out);
+			}
+
+			inline void reader_commit_data(uint32_t cnt)
+			{
+				smp_wmb();
+				SU_AO(out_) += (cnt * esize_);
+			}
+
+		private:
+			uint64_t in_;
+			uint64_t mask_;
+			byte_t* bytes_;
+			uint32_t esize_;
+			bool flag_;
+			uint64_t out_ __attribute__ ((aligned (64)));
+	};
+}
 
 #endif /* UTILS_LLRBEX_H_ */

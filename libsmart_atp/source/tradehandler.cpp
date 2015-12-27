@@ -234,7 +234,7 @@ namespace satp
 			return;
 		}
 
-		conn_state_ = CONN_OPENED;
+		SU_AO(conn_state_) = CONN_OPENED;
 	}
 
 } /* namespace qtp_bl */
