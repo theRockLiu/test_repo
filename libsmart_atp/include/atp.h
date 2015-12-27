@@ -108,9 +108,11 @@ namespace satp
 			int_fast8_t init();
 			int_fast8_t start()
 			{
+				return 0;
 			}
 			int_fast8_t stop()
 			{
+				return 0;
 			}
 			quot_engine::pointer_t create_quot_engine(exc_info_t &ei);
 			trade_engine::pointer_t create_trade_engine(exc_info_t &ei);

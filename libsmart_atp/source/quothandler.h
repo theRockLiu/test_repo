@@ -19,7 +19,6 @@ using namespace smart_utils;
 
 namespace satp
 {
-
 	class dce_quot_engine: public CQuotAPI, public quot_engine, public smart_utils::timer_base
 	{
 		public:
@@ -36,6 +35,14 @@ namespace satp
 			{
 				return NULL;
 			}
+			void on_added(bool b)
+			{
+
+			}
+			void on_removed(bool b)
+			{
+
+			}
 
 			///timer_base
 			void handle_timeout(uint64_t times);
@@ -51,16 +58,10 @@ namespace satp
 			virtual int onMarketDataMBLQuot(UINT4 nSeqNo, const _fldBestQuot & bestquot, CAPIVector<_fldOptPara> & lstOptPara, CAPIVector<_fldMBLQuot> & lstMBLQuot, BYTE bChainFlag = CHAIN_SINGLE);
 			///the func
 			virtual int onMarketDataArbiMBLQuot(UINT4 nSeqNo, const _fldArbiBestQuot & arbibestquot, CAPIVector<_fldMBLQuot> & lstMBLQuot, BYTE bChainFlag = CHAIN_SINGLE);
-
 			virtual int onRspQuotTraderPwdUpd(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldTraderPwdUpdReq & traderpwdupdreq, BYTE bChainFlag =
 			CHAIN_SINGLE);
-//	virtual int onRspQueryHistoryQuot(UINT4 nSeqNo, const _fldRspMsg & rspmsg,
-//			const _fldBestQuot & bestquot, CAPIVector<_fldOptPara> & lstOptPara,
-//			CAPIVector<_fldMBLQuot> & lstMBLQuot,
-//			BYTE bChainFlag = CHAIN_SINGLE);
 			virtual int onNtyCloseMktNotice(UINT4 nSeqNo, const _fldMktDataNotice & mktdatanotice, BYTE bChainFlag =
 			CHAIN_SINGLE);
-
 			virtual int onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char *pAddr);
 			virtual void onChannelLost(const char *szErrMsg);
 

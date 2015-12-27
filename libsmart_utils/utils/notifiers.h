@@ -39,8 +39,8 @@ public:
 public:
 	virtual int32_t open() = 0;
 	virtual int32_t close() = 0;
-	virtual void on_added(bool Suc) = 0;
-	virtual void on_removed(bool Suc) = 0;
+	virtual void on_added(bool Suc){}
+	virtual void on_removed(bool Suc){}
 	virtual int32_t get_fd() = 0;
 	virtual uint32_t get_events() = 0;
 	virtual void handle_events(uint32_t evts) = 0;
@@ -180,6 +180,7 @@ public:
 		return fd_;
 	}
 	void notify(uint64_t val);
+	int_fast8_t wait_evt();
 
 	virtual void handle_event(uint64_t val) = 0;
 

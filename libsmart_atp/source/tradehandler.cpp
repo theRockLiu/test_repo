@@ -6,14 +6,33 @@
  */
 
 #include "shared.h"
-
 #include "tradehandler.h"
 
 namespace satp
 {
+	class evt_helper: public smart_utils::event_base
+	{
+		public:
+			evt_helper(const dce_trade_engine::pointer_t &ptr)
+													: ptr_(ptr)
+			{
+			}
+			~evt_helper()
+			{
+			}
+
+		public:
+			void handle_event(uint64_t val)
+			{
+				ptr_->handle_evt(val);
+			}
+
+		private:
+			dce_trade_engine::pointer_t ptr_;
+	};
 
 	dce_trade_engine::dce_trade_engine()
-											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0)
+											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0), conn_state_(CONN_CLOSED)
 	{
 		// TODO Auto-generated constructor stub
 
@@ -24,113 +43,10 @@ namespace satp
 		// TODO Auto-generated destructor stub
 	}
 
-	void dce_trade_engine::check_conn()
-	{
-//		if (conn_ok_)
-//		{
-//			return;
-//		}
+//	void dce_trade_engine::check_conn()
+//	{
 //
-//		if (!init_)
-//		{
-//			SU_CHECK(SU_EC_SUC == InitAPI());
-//			SU_CHECK(SU_EC_SUC == InitCA(0, "", "", "", "", false));
-//			///
-//			LOGGER()->info("quot fens ip list size is : %d\n", lb_gws.size());
-//			for (auto x = lb_gws.begin(); x != lb_gws.end(); ++x)
-//			{
-//				LOGGER()->info("quot fens ip is : %s:%d\n", (*x).ip_.c_str(), (*x).port_);
-//				RegisterFens((*x).ip_.c_str(), (*x).port_);
-//			}
-//
-//			LOGGER()->info("quot gw ip list size is : %d\n", gws.size());
-//			for (auto x = gws.begin(); x != gws.end(); ++x)
-//			{
-//				LOGGER()->info("quot gw ip is : %s:%d\n", (*x).ip_.c_str(), (*x).port_);
-//				SetService((*x).ip_.c_str(), (*x).port_);
-//			}
-//
-//			init_ = true;
-//		}
-//
-//		///
-//		int_fast32_t ret = ConnectByFens();
-//		if (SU_EC_SUC != ret)
-//		{
-//			LOGGER()->error("connect to trade system with load balancer failed, return err code %d\n", ret);
-//			ret = Connect();
-//			if (SU_EC_SUC != ret)
-//			{
-//				LOGGER()->error("connect to trade system directly failed, return err code %d\n", ret);
-//				return;
-//			}
-//		}
-//		LOGGER()->info("connect to trade system successfully!\n");
-//
-//		///
-//		_fldTraderSessionReq
-//		req =
-//		{	MemberID : (char*) member_id.c_str(),
-//			TraderNo : (char*) trader_no.c_str(),
-//			IsShortCert : '0',
-//			//			ProgramID : {(char*) prog_id.c_str()},
-//			//			ProgramVer : {(char*) prog_ver.c_str()}
-//		};
-//
-//		_fldRspMsg rspmsg = { 0 };
-//		_fldTraderSessionRsp rsp = { 0 };
-//		ret = TraderSession(&req, (char*) passwd.c_str(), &rspmsg, &rsp);
-//		if (0 != ret)
-//		{
-//			LOGGER()->error("create session failed, return %d\n", ret);
-//			return;
-//		}
-//
-//		_fldTraderLoginReq
-//		loginreq =
-//		{	MemberID : (char*)member_id.c_str(),
-//			TraderNo : (char*)trader_no.c_str(),
-//			Pwd : (char*)passwd.c_str(),
-//			AppName : (char*)prog_id.c_str(),
-//			AppVersion : (char*)prog_ver.c_str()
-//		};
-//		_fldTraderLoginRsp loginrsp = { 0 };
-//		ret = Login(&loginreq, &rspmsg, &loginrsp);
-//		if (0 != ret)
-//		{
-//			LOGGER()->error("login failed, return %d\n", ret);
-//			return;
-//		}
-//
-//		LOGGER()->info("login successfully, %s : %s\n", loginrsp.Date.getValue(), loginrsp.Time.getValue());
-//
-//		long nMaxLocalID = 0;
-//		nMaxLocalID = loginrsp.LatestOrderNo + 1;
-//		if (nMaxLocalID > m_nOrderLocalID)
-//		{
-//#if DEBUG_LOG_ENABLE
-//			char tmplog[64] =
-//			{	0};
-//			sprintf(tmplog, "%ld", nMaxLocalID);
-//			DEBUG_LOG(tmplog);
-//#endif
-//			m_nOrderLocalID = nMaxLocalID;
-//			g_xw_info.SetMaxSBJLH(m_nOrderLocalID);
-//		}
-//		GetMaxLocalOrderID();
-//
-//		WriteBackLastSeqNo(); //V1.0.3.7//GK 20140108 ??Ȩ?ڻ??ϲ?
-//		if (m_bUpdateTimeToJYS)
-//		{
-//			SetLocalTimeToJYS();
-//		}
-//		UpdateTimeDiff();          //??¼ʱ???
-//		DFComm::AxSvrSetDispVal(INFO_GRP, GRPIM_TXZT, "????");
-//		//sNote.Format("???뻹??%d?????",loginrsp.ExpireDays)
-//		sNote.Format("?ɹ???¼?????ڻ?????ƽ̨");
-//		NOTIFY_LOG_KEY_EVN(sNote, MACRO_JYLINK, MACRO_JYLINK);
-
-	}
+//	}
 
 	int dce_trade_engine::onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg& rspmsg, CAPIVector<_fldOrder>& lstOrder, BYTE bChainFlag)
 	{
@@ -153,14 +69,24 @@ namespace satp
 
 	int_fast8_t dce_trade_engine::init(exc_info_t& ei)
 	{
+		evt_ptr_ = std::make_shared<evt_helper>(shared_from_this());
+
+		return 0;
 	}
 
 	evt_t* dce_trade_engine::get_evt()
 	{
+		return NULL;
+	}
+
+	smart_utils::notifier::pointer_t dce_trade_engine::get_event()
+	{
+		return std::dynamic_pointer_cast<smart_utils::notifier, smart_utils::event_base>(evt_ptr_);
 	}
 
 	int_fast8_t dce_trade_engine::async_send_cmd(cmd_t& cmd)
 	{
+		return 0;
 	}
 
 	void dce_trade_engine::handle_timeout(uint64_t times)
@@ -168,13 +94,18 @@ namespace satp
 		static class temp
 		{
 			public:
-				temp(bool is_logged)
+				temp(dce_trade_engine* x, bool is_logged)
 				{
-					SU_ASSERT(0 == InitAPI(is_logged, NULL));
+					SU_ASSERT(0 == x->InitAPI(is_logged, NULL));
 				}
-		} x(is_logged_);
+		} x(this, is_logged_);
 
-		if (CONN_OPENED == SUAO(conn_state_))
+		if (0 == evt_ptr_->wait_evt())
+		{
+			SU_AO(conn_state_) = CONN_CLOSED;
+		}
+
+		if (CONN_OPENED == SU_AO(conn_state_))
 		{
 			return;
 		}
@@ -235,6 +166,11 @@ namespace satp
 		}
 
 		SU_AO(conn_state_) = CONN_OPENED;
+	}
+
+	void dce_trade_engine::handle_evt(uint64_t val)
+	{
+
 	}
 
 } /* namespace qtp_bl */

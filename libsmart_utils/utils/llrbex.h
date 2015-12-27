@@ -27,7 +27,7 @@ namespace smart_utils
 		public:
 			int_fast8_t smart_llrb::init(uint64_t sz, uint32_t esz)
 			{
-				if (sz < 2)
+				if (sz < HUGE_PAGE_SIZE)
 				{
 					return -1;
 				}
@@ -35,7 +35,7 @@ namespace smart_utils
 				sz = ROUND_UP(sz, HUGE_PAGE_SIZE);
 				SU_ASSERT(0 == (sz & (sz - 1)));
 				SU_ASSERT(0 == sz / esz);
-				bytes_ = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB, -1, 0);
+				bytes_ = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB | MAP_HUGE_1GB | MAP_LOCKED, -1, 0);
 				flag_ = false;
 				if (bytes_ == MAP_FAILED)
 				{
@@ -44,6 +44,7 @@ namespace smart_utils
 					 */
 					flag_ = true;
 					SU_ASSERT(0 == posix_memalign((void**) &bytes_, HUGE_PAGE_SIZE, sz));
+					mlock(bytes_, sz);
 				}
 				in_ = 0;
 				out_ = 0;
@@ -61,6 +62,7 @@ namespace smart_utils
 				}
 				else
 				{
+					munlock(bytes_, mask_ + 1);
 					free(bytes_);
 				}
 

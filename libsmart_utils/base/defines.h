@@ -14,7 +14,8 @@
 #ifdef NDEBUG
 #define SU_CHECK(expr) assert(expr); ///to do ...
 #else
-#define SU_CHECK(expr) assert(expr);
+#define SU_CHECK(expr) assert(expr)
+#define SU_ASSERT(x) assert(x)
 #endif
 
 #define SU_CHECK_FAIL_RET(expr, ret) \
@@ -50,8 +51,8 @@
 
 /* The "volatile" is due to gcc bugs */
 #define smp_wmb() __asm__ __volatile__("": : :"memory")
-#define SU_AO(x) (*(volatile typeof(x) *)&(x))
-
+#define SU_AO(x) (*(volatile __typeof__(x) *)&(x))
+//#define SU_AO(x) (x)
 
 #ifndef MAP_HUGETLB
 /* Not always defined in glibc headers.  If the running kernel does not
@@ -65,7 +66,7 @@
 #ifdef __PPC__
 # define HUGE_PAGE_SIZE    (16ll * 1024 * 1024)
 #elif defined(__x86_64__) || defined(__i386__)
-# define HUGE_PAGE_SIZE    (2ll * 1024 * 1024)
+# define HUGE_PAGE_SIZE    (1024ll * 1024 * 1024)
 #else
 # error "Please define huge_page_size"
 #endif

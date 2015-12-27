@@ -194,7 +194,7 @@ namespace satp
 
 	int_fast8_t shared::add_quot_engine(quot_engine::pointer_t &qe)
 	{
-		smart_utils::event_base::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::event_base, quot_engine>(qe);
+		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, quot_engine>(qe);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_add_notifier(ptr);
@@ -203,28 +203,35 @@ namespace satp
 
 	int_fast8_t shared::rem_quot_engine(quot_engine::pointer_t&)
 	{
+		return 0;
 	}
 
 	int_fast8_t shared::add_trade_engine(trade_engine::pointer_t &te)
 	{
-		smart_utils::event_base::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::event_base, trade_engine>(te);
+		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, trade_engine>(te);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_add_notifier(ptr);
+
+//		satp::dce_trade_engine::pointer_t ptra = std::dynamic_pointer_cast<satp::dce_trade_engine, satp::trade_engine>(te);
+//		ne_.async_add_notifier(ptra->get_event());
+
 		return EC_SUC;
 	}
 
 	int_fast8_t shared::rem_trade_engine(trade_engine::pointer_t&)
 	{
+		return 0;
 	}
 
-	void shared::exec()
-	{
-		ne_.check_once();
-	}
+//	void shared::exec()
+//	{
+//		ne_.check_once();
+//	}
 
 	int_fast8_t shared::destroy()
 	{
+		return 0;
 	}
 
 	void shared::handle_timeout(uint64_t times)
@@ -265,6 +272,15 @@ namespace satp
 		{
 			case satp::exchanges::EX_DCE:
 			{
+				ptr = std::make_shared<satp::dce_trade_engine>();
+				if (EC_SUC != ptr->init(ei))
+				{
+					ptr = nullptr;
+				}
+				else
+				{
+					SHARED().add_trade_engine(ptr);
+				}
 				break;
 			}
 			default:

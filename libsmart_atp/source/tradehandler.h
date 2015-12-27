@@ -16,8 +16,11 @@
 namespace satp
 {
 
-	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base
+	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base, public std::enable_shared_from_this<dce_trade_engine>
 	{
+		public:
+			typedef std::shared_ptr<satp::dce_trade_engine> pointer_t;
+
 		public:
 			dce_trade_engine();
 			virtual ~dce_trade_engine();
@@ -27,9 +30,19 @@ namespace satp
 			int_fast8_t init(exc_info_t &ei);
 			evt_t* get_evt();
 			int_fast8_t async_send_cmd(cmd_t &cmd);
+			smart_utils::notifier::pointer_t get_event();
+			void on_added(bool b)
+			{
+
+			}
+			void on_removed(bool b)
+			{
+
+			}
 
 			///timer base.
 			void handle_timeout(uint64_t times);
+			void handle_evt(uint64_t val);
 
 			virtual int onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg & rspmsg, CAPIVector<_fldOrder> & lstOrder, BYTE bChainFlag = CHAIN_SINGLE);
 			virtual int onRspTraderCancelOrder(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldOrderAction & orderaction, BYTE bChainFlag = CHAIN_SINGLE);
@@ -57,6 +70,7 @@ namespace satp
 			string_t program_ver_;
 			string_t passwd_;
 			_fldTraderLoginRsp loginrsp_;
+			smart_utils::event_base::pointer_t evt_ptr_;
 	};
 
 } /* namespace qtp_bl */
