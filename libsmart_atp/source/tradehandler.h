@@ -31,14 +31,6 @@ namespace satp
 			evt_t* get_evt();
 			int_fast8_t async_send_cmd(cmd_t &cmd);
 			smart_utils::notifier::pointer_t get_event();
-			void on_added(bool b)
-			{
-
-			}
-			void on_removed(bool b)
-			{
-
-			}
 
 			///timer base.
 			void handle_timeout(uint64_t times);

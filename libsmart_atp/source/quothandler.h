@@ -35,14 +35,6 @@ namespace satp
 			{
 				return NULL;
 			}
-			void on_added(bool b)
-			{
-
-			}
-			void on_removed(bool b)
-			{
-
-			}
 
 			///timer_base
 			void handle_timeout(uint64_t times);
