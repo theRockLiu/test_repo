@@ -28,62 +28,32 @@ typedef struct price_level_info
 	uint32_t ask_posi_nc;
 } pli_t;
 
-
-//class myalgo: public satp::algo_base
-//{
-//public:
-//	void handle_quot(quot_info_t& qi)
-//	{
 //
-//	}
-//
-//	void handle_cmd_res(trade_cmd_res_t& cr)
-//	{
-//		if (ATP_ORDER_CMD == cr.type)
-//		{
-//			//price_vec[cr.pl].
-//
-//		}
-//		else if (ATP_CANCEL_CMD == cr.type)
-//		{
-//
-//		}
-//		else
-//		{
-//			SU_CHECK(false);
-//		}
-//	}
-//
-//	void handle_match_res(match_res_t &)
-//	{
-//
-//	}
-//
-//private:
-//	std::vector<pli_t> price_vec;
-//};
+void do_algo_trade(evt_t *quot_evt, evt_t *trade_evt)
+{
+	///TODO: run algo trade logic...
+}
 
 int main()
 {
+	///init
 	bool flag = true;
-
 	satp::algo_trade_platform ap;
 	ap.init();
 
+	///create quot engine and trade engine.
 	satp::exc_info_t x;
-	satp::quot_engine::pointer_t qe = ap.create_quot_engine(x);
+	std::unordered_map<std::string, uint64_t> &contracts;
+	satp::quot_engine::pointer_t qe = ap.create_quot_engine(x, contracts);
 	satp::trade_engine::pointer_t te = ap.create_trade_engine(x);
 
+	////now run the engines.
 	ap.start();
 	while(flag)
 	{
-		evt_t *evt = (evt_t*)qe->get_data();
-		///TODO: .....
-		evt_t *evt1 = (evt_t*)te->get_data();
-		///TODO:.....
-		///te.async_send_cmd(...);
+		///call algo trade func.
+		do_algo_trade(qe->get_evt(), te->get_evt());
 	}
 	ap.stop();
-
 }
 

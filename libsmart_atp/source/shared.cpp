@@ -187,10 +187,10 @@ namespace satp
 		return SU_EC_SUC;
 	}
 
-	void check_conn_timer::handle_timeout(uint64_t times)
-	{
-		SHARED().handle_timeout(times);
-	}
+//	void check_conn_timer::handle_timeout(uint64_t times)
+//	{
+//		SHARED().handle_timeout(times);
+//	}
 
 	int_fast8_t shared::add_quot_engine(quot_engine::pointer_t &qe)
 	{
@@ -265,7 +265,7 @@ namespace satp
 		return ptr;
 	}
 
-	trade_engine::pointer_t algo_trade_platform::create_trade_engine(exc_info_t& ei)
+	trade_engine::pointer_t algo_trade_platform::create_trade_engine(exc_info_t& ei, std::unordered_map<std::string, uint64_t> &contracts)
 	{
 		trade_engine::pointer_t ptr = nullptr;
 		switch (ei.id_)
@@ -273,7 +273,7 @@ namespace satp
 			case satp::exchanges::EX_DCE:
 			{
 				ptr = std::make_shared<satp::dce_trade_engine>();
-				if (EC_SUC != ptr->init(ei))
+				if (EC_SUC != ptr->init(ei, contracts))
 				{
 					ptr = nullptr;
 				}

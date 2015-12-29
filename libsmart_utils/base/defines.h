@@ -10,6 +10,7 @@
 #define UTILS_DEFINES_H_
 
 #include <cassert> ///for c++ assert
+#include "gcc.h"
 
 #ifdef NDEBUG
 #define SU_CHECK(expr) assert(expr); ///to do ...

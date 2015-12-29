@@ -12,6 +12,9 @@
 #include <sys/mman.h>
 #include "../base/base.h"
 
+#define MAP_HUGE_2MB    (21 << MAP_HUGE_SHIFT)
+#define MAP_HUGE_1GB    (30 << MAP_HUGE_SHIFT)
+
 namespace smart_utils
 {
 	class smart_llrb
@@ -25,7 +28,7 @@ namespace smart_utils
 			}
 
 		public:
-			int_fast8_t smart_llrb::init(uint64_t sz, uint32_t esz)
+			int_fast8_t init(uint64_t sz, uint32_t esz)
 			{
 				if (sz < HUGE_PAGE_SIZE)
 				{
@@ -35,7 +38,7 @@ namespace smart_utils
 				sz = ROUND_UP(sz, HUGE_PAGE_SIZE);
 				SU_ASSERT(0 == (sz & (sz - 1)));
 				SU_ASSERT(0 == sz / esz);
-				bytes_ = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB | MAP_HUGE_1GB | MAP_LOCKED, -1, 0);
+				bytes_ = (byte_t*)mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB | MAP_HUGE_1GB | MAP_LOCKED, -1, 0);
 				flag_ = false;
 				if (bytes_ == MAP_FAILED)
 				{
@@ -54,7 +57,7 @@ namespace smart_utils
 				return 0;
 			}
 
-			int_fast8_t smart_llrb::destroy()
+			int_fast8_t destroy()
 			{
 				if (!flag_)
 				{

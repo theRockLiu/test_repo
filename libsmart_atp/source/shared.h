@@ -23,17 +23,18 @@ namespace spd = spdlog;
 
 namespace satp
 {
-	struct order_info
+	inline uint64_t hash_str(const char* data)
 	{
-			uint32_t excode :4;
-			uint32_t cid :10;
-	};
+		//return *((uint64_t*)data);
 
-	class check_conn_timer: smart_utils::timer_base
-	{
-		public:
-			void handle_timeout(uint64_t times);
-	};
+		uint64_t hash = 5381;
+		int c;
+
+		while (c = *data++)
+			hash = ((hash << 5) + hash) + c;
+
+		return hash;
+	}
 
 ///
 	class shared

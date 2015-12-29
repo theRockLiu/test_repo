@@ -52,26 +52,61 @@ namespace satp
 	{
 		SU_CHECK(CHAIN_SINGLE == bChainFlag);
 
-		//evt_t *data = rb_.get_next_buf();
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
+		evt->id_ = EVT_SEND_ORDER_RSP;
+		evt->body_.sor_.err_code_ = rspmsg.ErrCode;
+		evt->body_.sor_.cid_ = hash_str(lstOrder[0].ContractID.getValue());
+		evt->body_.sor_.local_no_ = lstOrder[0].LocalOrderNo;
+		evt->body_.sor_.sys_no_ = lstOrder[0].SysOrderNo;
+
+		llrb_.writer_commit_bytes(1);
 
 		return 0;
 	}
 
 	int dce_trade_engine::onRspTraderCancelOrder(UINT4 nSeqNo, const _fldRspMsg& rspmsg, const _fldOrderAction& orderaction, BYTE bChainFlag)
 	{
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
+		evt->id_ = EVT_SEND_ORDER_RSP;
+		evt->body_.wor_.err_code_ = rspmsg.ErrCode;
+		evt->body_.wor_.cid_ = hash_str(const_cast<_fldOrderAction&>(orderaction).ContractID.getValue());
+		evt->body_.wor_.local_no_ = orderaction.LocalOrderNo;
+		evt->body_.wor_.sys_no_ = orderaction.SysOrderNo;
+
+		llrb_.writer_commit_bytes(1);
+
 		return 0;
 	}
 
 	int dce_trade_engine::onNtyTraderMatch(UINT4 nSeqNo, const _fldMatch& match, BYTE bChainFlag)
 	{
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
+		evt->id_ = EVT_MATCH_RSP;
+		evt->body_.omr_.cid_ = hash_str(const_cast<_fldMatch&>(match).ContractID.getValue());
+		evt->body_.omr_.local_no_ = match.LocalID;
+		evt->body_.omr_.sys_no_ = match.SysOrderNo;
+
+		llrb_.writer_commit_bytes(1);
+
 		return 0;
 	}
 
-	int_fast8_t dce_trade_engine::init(exc_info_t& ei)
+	int_fast8_t dce_trade_engine::init(exc_info_t &ei, std::unordered_map<std::string, uint64_t> &contracts)
 	{
 		evt_ptr_ = std::make_shared<evt_helper>(shared_from_this());
 
-		return 0;
+		for (auto &x : contracts)
+		{
+			CAPIVector<_fldOrder> order;
+			strncpy(order[0].ContractID.buf, x.first.c_str(), order[0].ContractID.Length());
+			x.second = std::hash<std::string> {}(x.first);
+			order_samples_.insert(std::pair<uint64_t, CAPIVector<_fldOrder> >(x.second, order));
+		}
+
+		return llrb_.init(LLRB_SIZE, ELEM_SIZE);
 	}
 
 	evt_t* dce_trade_engine::get_evt()
@@ -79,14 +114,18 @@ namespace satp
 		return NULL;
 	}
 
-	smart_utils::notifier::pointer_t dce_trade_engine::get_event()
-	{
-		return std::dynamic_pointer_cast<smart_utils::notifier, smart_utils::event_base>(evt_ptr_);
-	}
+//	smart_utils::notifier::pointer_t dce_trade_engine::get_event()
+//	{
+//		return std::dynamic_pointer_cast<smart_utils::notifier, smart_utils::event_base>(evt_ptr_);
+//	}
 
 	int_fast8_t dce_trade_engine::async_send_cmd(cmd_t& cmd)
 	{
-		return 0;
+		CAPIVector<_fldOrder> &orders = order_samples_[cmd.body_.sor_.cid_];
+		orders[0].Price = cmd.body_.sor_.price_;
+
+		uint32_t seqno = 0;
+		return ReqTraderInsertOrders(&seqno, orders);
 	}
 
 	void dce_trade_engine::handle_timeout(uint64_t times)
@@ -117,11 +156,11 @@ namespace satp
 			return;
 		}
 
-		for (auto x : fens_addrs_)
+		for (auto &x : fens_addrs_)
 		{
 			RegisterFens(x.ip.c_str(), x.port);
 		}
-		for (auto x : gw_addrs_)
+		for (auto &x : gw_addrs_)
 		{
 			SetService(x.ip.c_str(), x.port);
 		}
@@ -164,6 +203,8 @@ namespace satp
 			LOGGER()->error("login trade sys failed: %d\n", ret);
 			return;
 		}
+
+		Ready(READY, READY, true);
 
 		SU_AO(conn_state_) = CONN_OPENED;
 	}

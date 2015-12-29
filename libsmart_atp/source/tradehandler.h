@@ -8,10 +8,15 @@
 #ifndef TRADEHANDLER_H_
 #define TRADEHANDLER_H_
 
+#include <unordered_map>
 #include <cinttypes>
 #include <utils/notifiers.h>
+#include <utils/llrbex.h>
 #include "../include/atp.h"
 #include "../apis/dce/Linux/trade/lib/TradeAPI.h"
+
+#define LLRB_SIZE (1024 * 1024 * 1024)
+#define ELEM_SIZE (256)
 
 namespace satp
 {
@@ -27,18 +32,19 @@ namespace satp
 
 		public:
 			///trade engine
-			int_fast8_t init(exc_info_t &ei);
+			int_fast8_t init(exc_info_t &ei, std::unordered_map<std::string, uint64_t> &contracts);
 			evt_t* get_evt();
 			int_fast8_t async_send_cmd(cmd_t &cmd);
-			smart_utils::notifier::pointer_t get_event();
+			//smart_utils::notifier::pointer_t get_event();
 
 			///timer base.
 			void handle_timeout(uint64_t times);
 			void handle_evt(uint64_t val);
 
-			virtual int onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg & rspmsg, CAPIVector<_fldOrder> & lstOrder, BYTE bChainFlag = CHAIN_SINGLE);
-			virtual int onRspTraderCancelOrder(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldOrderAction & orderaction, BYTE bChainFlag = CHAIN_SINGLE);
-			virtual int onNtyTraderMatch(UINT4 nSeqNo, const _fldMatch & match, BYTE bChainFlag = CHAIN_SINGLE);
+			///callback
+			int onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg & rspmsg, CAPIVector<_fldOrder> & lstOrder, BYTE bChainFlag = CHAIN_SINGLE);
+			int onRspTraderCancelOrder(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldOrderAction & orderaction, BYTE bChainFlag = CHAIN_SINGLE);
+			int onNtyTraderMatch(UINT4 nSeqNo, const _fldMatch & match, BYTE bChainFlag = CHAIN_SINGLE);
 
 		private:
 			enum
@@ -63,6 +69,8 @@ namespace satp
 			string_t passwd_;
 			_fldTraderLoginRsp loginrsp_;
 			smart_utils::event_base::pointer_t evt_ptr_;
+			smart_utils::smart_llrb llrb_;
+			std::unordered_map<uint64_t, CAPIVector<_fldOrder> > order_samples_;
 	};
 
 } /* namespace qtp_bl */
