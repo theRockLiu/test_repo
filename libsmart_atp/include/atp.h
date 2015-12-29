@@ -13,7 +13,6 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include <functional>
 
 #include <base/types.h>
 #include "../include/data.h"
@@ -35,7 +34,7 @@ namespace satp
 	enum events
 		: uint8_t
 		{
-			EVT_QUOT = 0, EVT_SEND_ORDER_RSP = 1, EVT_WITHDRAW_ORDER_RSP = 2, EVT_MATCH_RSP = 3
+			EVT_QUOT = 0, EVT_SEND_ORDER_REQ, EVT_SEND_ORDER_RSP, EVT_WITHDRAW_ORDER_REQ, EVT_WITHDRAW_ORDER_RSP, EVT_MATCH_RSP
 	};
 
 	typedef struct event
@@ -91,6 +90,12 @@ namespace satp
 							uint64_t cid_;
 							double price_;
 					} sor_;
+
+					struct withdraw_order_req
+					{
+							uint64_t cid_;
+							uint32_t sys_no_;
+					} wor_;
 			} body_;
 	} cmd_t;
 

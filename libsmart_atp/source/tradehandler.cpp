@@ -100,10 +100,11 @@ namespace satp
 
 		for (auto &x : contracts)
 		{
-			CAPIVector<_fldOrder> order;
-			strncpy(order[0].ContractID.buf, x.first.c_str(), order[0].ContractID.Length());
-			x.second = std::hash<std::string> {}(x.first);
-			order_samples_.insert(std::pair<uint64_t, CAPIVector<_fldOrder> >(x.second, order));
+			struct sample s;
+			strncpy(s.send_req_[0].ContractID.buf, x.first.c_str(), s.send_req_[0].ContractID.Length());
+			strncpy(s.withdraw_req_.ContractID.buf, x.first.c_str(), s.withdraw_req_.ContractID.Length());
+			x.second = hash_str(x.first.c_str());
+			samples_.insert(std::pair<uint64_t, struct sample>(x.second, s));
 		}
 
 		return llrb_.init(LLRB_SIZE, ELEM_SIZE);
@@ -121,11 +122,32 @@ namespace satp
 
 	int_fast8_t dce_trade_engine::async_send_cmd(cmd_t& cmd)
 	{
-		CAPIVector<_fldOrder> &orders = order_samples_[cmd.body_.sor_.cid_];
-		orders[0].Price = cmd.body_.sor_.price_;
+		switch (cmd.id_)
+		{
+			case EVT_SEND_ORDER_REQ:
+			{
+				struct sample &x = samples_[cmd.body_.sor_.cid_];
+				x.send_req_[0].Price = cmd.body_.sor_.price_;
 
-		uint32_t seqno = 0;
-		return ReqTraderInsertOrders(&seqno, orders);
+				uint32_t seqno = 0;
+				return ReqTraderInsertOrders(&seqno, x.send_req_);
+			}
+			case EVT_WITHDRAW_ORDER_REQ:
+			{
+				struct sample &x = samples_[cmd.body_.wor_.cid_];
+				x.withdraw_req_.SysOrderNo = cmd.body_.wor_.sys_no_;
+
+				uint32_t seqno = 0;
+				return ReqTraderCancelOrder(&seqno, x.withdraw_req_);
+			}
+			default:
+			{
+				SU_ASSERT(false);
+				break;
+			}
+		}
+
+		return 0;
 	}
 
 	void dce_trade_engine::handle_timeout(uint64_t times)

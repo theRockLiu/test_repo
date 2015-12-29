@@ -70,7 +70,12 @@ namespace satp
 			_fldTraderLoginRsp loginrsp_;
 			smart_utils::event_base::pointer_t evt_ptr_;
 			smart_utils::smart_llrb llrb_;
-			std::unordered_map<uint64_t, CAPIVector<_fldOrder> > order_samples_;
+			struct sample
+			{
+					CAPIVector<_fldOrder> send_req_;
+					_fldOrderAction withdraw_req_;
+			};
+			std::unordered_map<uint64_t, struct sample> samples_;
 	};
 
 } /* namespace qtp_bl */
