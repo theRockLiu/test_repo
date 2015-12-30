@@ -5,6 +5,7 @@
  *      Author: rock
  */
 
+#include "../apis/dce/Linux/trade/PublicAPI/Constant.h"
 #include "shared.h"
 #include "tradehandler.h"
 
@@ -157,6 +158,7 @@ namespace satp
 			public:
 				temp(dce_trade_engine* x, bool is_logged)
 				{
+					LOGGER()->info("api version: %s\n", x->Version());
 					SU_ASSERT(0 == x->InitAPI(is_logged, NULL));
 				}
 		} x(this, is_logged_);
@@ -234,6 +236,137 @@ namespace satp
 	void dce_trade_engine::handle_evt(uint64_t val)
 	{
 
+	}
+
+	int dce_trade_engine::onTraderOrdersConfirmation(UINT4 nSeqNo, const _fldOrderStatus& orderstatus, BYTE bChainFlag)
+	{
+	}
+
+	int dce_trade_engine::onNtyMktStatus(UINT4 nSeqNo, const _fldMktStatus& mktstatus, CAPIVector<_fldVarietyMktStatus>& mVarietyMktStatus, BYTE bChainFlag)
+	{
+		SU_ASSERT(CHAIN_SINGLE == bChainFlag);
+		uint8_t status = 0;
+		switch (atoi(const_cast<_fldMktStatus&>(mktstatus).MktStatus.getValue()))
+		{
+			case 11: //11 EC_INIT
+			{
+				status = MS_TRADE_INIT;
+				break;
+			}
+			case 12:  //12 EC_AUCTION_ORDER
+			{
+				status = MS_TRADE_AUCTION_SEND_ORDERS;
+				break;
+			}
+			case 13:  //13 EC_AUCTION_PAUSE
+			{
+				status = MS_TRADE_AUCTION_PAUSE;
+				break;
+			}
+			case 14:   //14 EC_AUCTION_MATCH
+			{
+				status = MS_TRADE_AUCTION_MATCH;
+				break;
+			}
+			case 15:   //15 EC_TRADE
+			{
+				status = MS_TRADE_CONTINUE;
+				break;
+			}
+			case 16:   //16 EC_TRADE_PAUSE
+			{
+				status = MS_TRADE_PAUSE;
+				break;
+			}
+			case 50:   //50 EC_CLOSE            "50"	          //????
+			{
+				status = MS_TRADE_CLOSED;
+				break;
+			}
+			default:
+			{
+				SU_ASSERT(false);
+				break;
+			}
+		}
+
+		evt_t* evt = NULL;
+		for (int i = 0; i < mVarietyMktStatus.GetCount(); i++)
+		{
+			if (0 == i % MAX_MARKET_STATUS_CNT)
+			{
+				evt = (evt_t*) llrb_.writer_get_bytes(1);
+				evt->id_ = EVT_MARKET_STATUS;
+				evt->body_.msr_.market_status_ = status;
+				evt->body_.msr_.cnt_ = 0;
+			}
+			evt->body_.msr_.cnt_++;
+			switch (atoi(mVarietyMktStatus.Get(i).Status.getValue()))
+			{
+				case 11:
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_INIT;
+					break;
+				}
+				case 12:  //12 EC_AUCTION_ORDER ???۱???
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_SEND_ORDERS;
+					break;
+				}
+				case 13:  //13 EC_AUCTION_PAUSE ??????ͣ
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_PAUSE;
+					break;
+				}
+				case 14:   //14 EC_AUCTION_MATCH ???۴??
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_MATCH;
+					break;
+				}
+				case 15:   //15 EC_TRADE         ????????
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_CONTINUE;
+					break;
+				}
+				case 16:   //16 EC_TRADE_PAUSE   ??????ͣ
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_PAUSE;
+					break;
+				}
+				case 50:   //50 EC_CLOSE         ???̱???
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_CLOSED;
+					break;
+				}
+				default:
+				{
+					SU_ASSERT(false);
+					break;
+				}
+			}
+			evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].trade_type_ = (TT_OPT == mVarietyMktStatus.Get(i).TradeType ? TT_OPTION : TT_FUTURE);
+			evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].var_ = hash_str(mVarietyMktStatus.Get(i).VarietyId.getValue());
+			if (MAX_MARKET_STATUS_CNT == evt->body_.msr_.cnt_)
+			{
+				llrb_.writer_commit_bytes(1);
+			}
+		}
+		if (mVarietyMktStatus.GetCount() % MAX_MARKET_STATUS_CNT != 0)
+		{
+			llrb_.writer_commit_bytes(1);
+		}
+	}
+
+	int dce_trade_engine::onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char* pAddr)
+	{
+		LOGGER()->error("invalid package: %u, %u, %u, %u, %u, %s\n", nTID, nSeries, nSequenceNo, nFieldCount, nFieldsLen, pAddr);
+		return 0;
+	}
+
+	void dce_trade_engine::onChannelLost(const char* szErrMsg)
+	{
+		LOGGER()->error("conn closed: %s\n", szErrMsg);
+		evt_ptr_->notify(CONN_CLOSED);
 	}
 
 } /* namespace qtp_bl */

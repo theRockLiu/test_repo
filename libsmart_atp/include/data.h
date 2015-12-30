@@ -14,5 +14,7 @@ typedef struct addr_info
 	uint16_t port_;
 } addr_info_t;
 
+#define LLRB_SIZE (1024 * 1024 * 1024)
+#define ELEM_SIZE (256)
 
 #endif /* INCLUDE_DATA_H_ */

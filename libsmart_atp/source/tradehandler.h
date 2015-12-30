@@ -15,11 +15,13 @@
 #include "../include/atp.h"
 #include "../apis/dce/Linux/trade/lib/TradeAPI.h"
 
-#define LLRB_SIZE (1024 * 1024 * 1024)
-#define ELEM_SIZE (256)
-
 namespace satp
 {
+
+	enum
+	{
+		CONN_CLOSED = 1
+	};
 
 	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base, public std::enable_shared_from_this<dce_trade_engine>
 	{
@@ -45,6 +47,10 @@ namespace satp
 			int onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg & rspmsg, CAPIVector<_fldOrder> & lstOrder, BYTE bChainFlag = CHAIN_SINGLE);
 			int onRspTraderCancelOrder(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldOrderAction & orderaction, BYTE bChainFlag = CHAIN_SINGLE);
 			int onNtyTraderMatch(UINT4 nSeqNo, const _fldMatch & match, BYTE bChainFlag = CHAIN_SINGLE);
+			int onTraderOrdersConfirmation(UINT4 nSeqNo, const _fldOrderStatus & orderstatus, BYTE bChainFlag = CHAIN_SINGLE);
+			int onNtyMktStatus(UINT4 nSeqNo, const _fldMktStatus & mktstatus, CAPIVector<_fldVarietyMktStatus> & mVarietyMktStatus, BYTE bChainFlag = CHAIN_SINGLE);
+			int onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char *pAddr);
+			void onChannelLost(const char *szErrMsg);
 
 		private:
 			enum

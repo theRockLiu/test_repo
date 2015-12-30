@@ -31,11 +31,31 @@ namespace satp
 			EX_DCE = 0, EX_SSE = 1
 	};
 
+	enum trade_type
+		: uint8_t
+		{
+			TT_FUTURE = 0, TT_OPTION
+	};
+
+	enum market_statuss
+		:uint8_t
+		{
+			MS_TRADE_INIT = 0, MS_TRADE_AUCTION_SEND_ORDERS, MS_TRADE_AUCTION_PAUSE, MS_TRADE_AUCTION_MATCH, MS_TRADE_CONTINUE, MS_TRADE_PAUSE, MS_TRADE_CLOSED
+	};
+
 	enum events
 		: uint8_t
 		{
-			EVT_QUOT = 0, EVT_SEND_ORDER_REQ, EVT_SEND_ORDER_RSP, EVT_WITHDRAW_ORDER_REQ, EVT_WITHDRAW_ORDER_RSP, EVT_MATCH_RSP
+			EVT_QUOT = 0, EVT_SEND_ORDER_REQ, EVT_SEND_ORDER_RSP, EVT_WITHDRAW_ORDER_REQ, EVT_WITHDRAW_ORDER_RSP, EVT_MATCH_RSP, EVT_MARKET_STATUS, EVT_VARIETY_STATUS
 	};
+
+	struct variety_status_rsp
+	{
+			uint64_t var_;
+			uint8_t trade_type_;
+			uint8_t status_;
+	};
+#define MAX_MARKET_STATUS_CNT (ELEM_SIZE / sizeof(struct variety_status_rsp) - 1)
 
 	typedef struct event
 	{
@@ -67,6 +87,13 @@ namespace satp
 							uint32_t sys_no_;
 							double price_;
 					} omr_;
+
+					struct market_status_rsp
+					{
+							uint8_t market_status_;
+							uint8_t cnt_;
+							struct variety_status_rsp vsr_[MAX_MARKET_STATUS_CNT];
+					} msr_;
 
 			} body_;
 	} evt_t;
