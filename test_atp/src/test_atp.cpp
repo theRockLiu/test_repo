@@ -73,7 +73,6 @@ int main()
 	////
 	satp::quot_engine::pointer_t qe = ap.create_quot_engine(x, contracts);
 	satp::trade_engine::pointer_t te = ap.create_trade_engine(x, contracts);
-
 	///
 	my_algo1 ma;
 	evt_t *et = NULL;
