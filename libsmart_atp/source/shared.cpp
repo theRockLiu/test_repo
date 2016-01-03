@@ -19,7 +19,6 @@ using namespace smart_utils;
 
 namespace satp
 {
-
 	shared::shared()
 	{
 		// TODO Auto-generated constructor stub
@@ -238,7 +237,7 @@ namespace satp
 	{
 	}
 
-	quot_engine::pointer_t algo_trade_platform::create_quot_engine(exc_info_t& ei)
+	quot_engine::pointer_t algo_trade_platform::create_quot_engine(const exc_info_t& ei, const std::vector<std::string> &contracts)
 	{
 		quot_engine::pointer_t ptr = nullptr;
 		switch (ei.id_)
@@ -246,7 +245,7 @@ namespace satp
 			case satp::exchanges::EX_DCE:
 			{
 				ptr = std::make_shared<satp::dce_quot_engine>();
-				if (EC_SUC != ptr->init(ei))
+				if (EC_SUC != ptr->init(ei, contracts))
 				{
 					ptr = nullptr;
 				}
@@ -265,7 +264,7 @@ namespace satp
 		return ptr;
 	}
 
-	trade_engine::pointer_t algo_trade_platform::create_trade_engine(exc_info_t& ei, std::unordered_map<std::string, uint64_t> &contracts)
+	trade_engine::pointer_t algo_trade_platform::create_trade_engine(const exc_info_t& ei, const std::vector<std::string> &contracts)
 	{
 		trade_engine::pointer_t ptr = nullptr;
 		switch (ei.id_)

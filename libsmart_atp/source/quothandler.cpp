@@ -70,4 +70,8 @@ namespace satp
 	{
 	}
 
+	void dce_quot_engine::handle_timeout(uint64_t times)
+	{
+	}
+
 } /* namespace qtp_bl */

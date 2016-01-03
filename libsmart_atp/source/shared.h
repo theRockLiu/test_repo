@@ -23,19 +23,6 @@ namespace spd = spdlog;
 
 namespace satp
 {
-	inline uint64_t hash_str(const char* data)
-	{
-		//return *((uint64_t*)data);
-
-		uint64_t hash = 5381;
-		int c;
-
-		while (c = *data++)
-			hash = ((hash << 5) + hash) + c;
-
-		return hash;
-	}
-
 ///
 	class shared
 	{

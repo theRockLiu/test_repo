@@ -34,7 +34,7 @@ namespace satp
 
 		public:
 			///trade engine
-			int_fast8_t init(exc_info_t &ei, std::unordered_map<std::string, uint64_t> &contracts);
+			int_fast8_t init(const exc_info_t &ei, const std::vector<std::string> &contracts);
 			evt_t* get_evt();
 			int_fast8_t async_send_cmd(cmd_t &cmd);
 			//smart_utils::notifier::pointer_t get_event();

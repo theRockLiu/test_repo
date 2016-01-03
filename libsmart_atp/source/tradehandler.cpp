@@ -33,7 +33,7 @@ namespace satp
 	};
 
 	dce_trade_engine::dce_trade_engine()
-											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0), conn_state_(CONN_CLOSED)
+											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0), conn_state_(CONN_CLOSED), is_logged_(false)
 	{
 		// TODO Auto-generated constructor stub
 
@@ -43,11 +43,6 @@ namespace satp
 	{
 		// TODO Auto-generated destructor stub
 	}
-
-//	void dce_trade_engine::check_conn()
-//	{
-//
-//	}
 
 	int dce_trade_engine::onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg& rspmsg, CAPIVector<_fldOrder>& lstOrder, BYTE bChainFlag)
 	{
@@ -95,17 +90,16 @@ namespace satp
 		return 0;
 	}
 
-	int_fast8_t dce_trade_engine::init(exc_info_t &ei, std::unordered_map<std::string, uint64_t> &contracts)
+	int_fast8_t dce_trade_engine::init(const exc_info_t &ei, const std::vector<std::string> &contracts)
 	{
 		evt_ptr_ = std::make_shared<evt_helper>(shared_from_this());
 
 		for (auto &x : contracts)
 		{
 			struct sample s;
-			strncpy(s.send_req_[0].ContractID.buf, x.first.c_str(), s.send_req_[0].ContractID.Length());
-			strncpy(s.withdraw_req_.ContractID.buf, x.first.c_str(), s.withdraw_req_.ContractID.Length());
-			x.second = hash_str(x.first.c_str());
-			samples_.insert(std::pair<uint64_t, struct sample>(x.second, s));
+			strncpy(s.send_req_[0].ContractID.buf, x.c_str(), s.send_req_[0].ContractID.Length());
+			strncpy(s.withdraw_req_.ContractID.buf, x.c_str(), s.withdraw_req_.ContractID.Length());
+			samples_[hash_str(x.c_str())] = s;
 		}
 
 		return llrb_.init(LLRB_SIZE, ELEM_SIZE);
@@ -235,11 +229,23 @@ namespace satp
 
 	void dce_trade_engine::handle_evt(uint64_t val)
 	{
-
+		SU_ASSERT(false);
 	}
 
 	int dce_trade_engine::onTraderOrdersConfirmation(UINT4 nSeqNo, const _fldOrderStatus& orderstatus, BYTE bChainFlag)
 	{
+		SU_ASSERT(CHAIN_SINGLE == bChainFlag);
+
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+		evt->id_ = EVT_ORDER_STATUS;
+		evt->body_.osr_.sys_no_ = orderstatus.SysOrderNo;
+		evt->body_.osr_.local_no_ = orderstatus.LocalOrderNo;
+		evt->body_.osr_.client_id_ = hash_str(const_cast<_fldOrderStatus&>(orderstatus).ClientID.getValue());
+		evt->body_.osr_.contract_id_ = hash_str(const_cast<_fldOrderStatus&>(orderstatus).ContractID.getValue());
+
+		llrb_.writer_commit_bytes(1);
+
+		return 0;
 	}
 
 	int dce_trade_engine::onNtyMktStatus(UINT4 nSeqNo, const _fldMktStatus& mktstatus, CAPIVector<_fldVarietyMktStatus>& mVarietyMktStatus, BYTE bChainFlag)

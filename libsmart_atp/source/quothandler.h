@@ -27,7 +27,7 @@ namespace satp
 
 		public:
 			///quot_engine
-			int_fast8_t init(exc_info_t&)
+			int_fast8_t init(const exc_info_t &ei, const std::vector<std::string> &contracts)
 			{
 				return EC_SUC;
 			}

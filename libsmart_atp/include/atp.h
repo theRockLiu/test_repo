@@ -19,6 +19,19 @@
 
 namespace satp
 {
+	inline uint64_t hash_str(const char* data)
+	{
+		//return *((uint64_t*)data);
+
+		uint64_t hash = 5381;
+		int c;
+
+		while (c = *data++)
+			hash = ((hash << 5) + hash) + c;
+
+		return hash;
+	}
+
 	enum err_code
 		: int8_t
 		{
@@ -46,7 +59,7 @@ namespace satp
 	enum events
 		: uint8_t
 		{
-			EVT_QUOT = 0, EVT_SEND_ORDER_REQ, EVT_SEND_ORDER_RSP, EVT_WITHDRAW_ORDER_REQ, EVT_WITHDRAW_ORDER_RSP, EVT_MATCH_RSP, EVT_MARKET_STATUS, EVT_VARIETY_STATUS
+			EVT_QUOT = 0, EVT_SEND_ORDER_REQ, EVT_SEND_ORDER_RSP, EVT_WITHDRAW_ORDER_REQ, EVT_WITHDRAW_ORDER_RSP, EVT_MATCH_RSP, EVT_MARKET_STATUS, EVT_VARIETY_STATUS, EVT_ORDER_STATUS, EVT_CNT
 	};
 
 	struct variety_status_rsp
@@ -95,6 +108,14 @@ namespace satp
 							struct variety_status_rsp vsr_[MAX_MARKET_STATUS_CNT];
 					} msr_;
 
+					struct order_status_rsp
+					{
+							uint64_t contract_id_;
+							uint64_t client_id_;
+							uint32_t sys_no_;
+							uint32_t local_no_;
+					} osr_;
+
 			} body_;
 	} evt_t;
 
@@ -130,7 +151,7 @@ namespace satp
 	class quot_engine
 	{
 		public:
-			typedef std::shared_ptr<quot_engine> pointer_t;
+			typedef std::shared_ptr<satp::quot_engine> pointer_t;
 		public:
 			quot_engine()
 			{
@@ -140,14 +161,14 @@ namespace satp
 			}
 
 		public:
-			virtual int_fast8_t init(exc_info_t&) = 0;
+			virtual int_fast8_t init(const exc_info_t &ei, const std::vector<std::string> &contracts) = 0;
 			virtual evt_t* get_evt() = 0;
 	};
 
 	class trade_engine
 	{
 		public:
-			typedef std::shared_ptr<trade_engine> pointer_t;
+			typedef std::shared_ptr<satp::trade_engine> pointer_t;
 		public:
 			trade_engine()
 			{
@@ -157,7 +178,7 @@ namespace satp
 			}
 
 		public:
-			virtual int_fast8_t init(exc_info_t &ei, std::unordered_map<std::string, uint64_t> &contracts) = 0;
+			virtual int_fast8_t init(const exc_info_t &ei, const std::vector<std::string> &contracts) = 0;
 			virtual evt_t* get_evt() = 0;
 			virtual int_fast8_t async_send_cmd(cmd_t&) = 0;
 	};
@@ -185,8 +206,8 @@ namespace satp
 			{
 				return 0;
 			}
-			quot_engine::pointer_t create_quot_engine(exc_info_t &ei);
-			trade_engine::pointer_t create_trade_engine(exc_info_t &ei, std::unordered_map<std::string, uint64_t> &contracts);
+			quot_engine::pointer_t create_quot_engine(const exc_info_t &ei, const std::vector<std::string> &contracts);
+			trade_engine::pointer_t create_trade_engine(const exc_info_t &ei, const std::vector<std::string> &contracts);
 	};
 }
 
