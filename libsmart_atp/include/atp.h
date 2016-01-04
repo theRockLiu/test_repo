@@ -59,7 +59,19 @@ namespace satp
 	enum events
 		: uint8_t
 		{
-			EVT_QUOT = 0, EVT_SEND_ORDER_REQ, EVT_SEND_ORDER_RSP, EVT_WITHDRAW_ORDER_REQ, EVT_WITHDRAW_ORDER_RSP, EVT_MATCH_RSP, EVT_MARKET_STATUS, EVT_VARIETY_STATUS, EVT_ORDER_STATUS, EVT_CNT
+			EVT_L1_BASE_QUOT = 0,
+		EVT_L1_ARBI_QUOT,
+		EVT_L2_BASE_QUOT,
+		EVT_L2_ARBI_QUOT,
+		EVT_SEND_ORDER_REQ,
+		EVT_SEND_ORDER_RSP,
+		EVT_WITHDRAW_ORDER_REQ,
+		EVT_WITHDRAW_ORDER_RSP,
+		EVT_MATCH_RSP,
+		EVT_MARKET_STATUS,
+		EVT_VARIETY_STATUS,
+		EVT_ORDER_STATUS,
+		EVT_CNT
 	};
 
 	struct variety_status_rsp
@@ -115,6 +127,33 @@ namespace satp
 							uint32_t sys_no_;
 							uint32_t local_no_;
 					} osr_;
+
+					struct l1_base_quot
+					{
+							uint64_t contract_id_;
+							double last_price_;
+							double high_price_;
+							double low_price_;
+							double bid_price_;
+							double ask_price_;
+							uint32_t bid_qty_;
+							uint32_t ask_qty_;
+							byte_t tm_[8];
+					} lbq_;
+
+					struct l1_arbi_quot
+					{
+							uint64_t contract_id_;
+							double last_price_;
+							double high_price_;
+							double low_price_;
+							double bid_price_;
+							double ask_price_;
+							uint32_t bid_qty_;
+							uint32_t ask_qty_;
+							byte_t tm_[8];
+
+					} laq_;
 
 			} body_;
 	} evt_t;

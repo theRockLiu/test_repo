@@ -52,7 +52,7 @@ class my_algo1
 
 	public:
 
-		void exec()
+		inline void exec()
 		{
 			evt_t* et = dce_qe_->get_evt();
 			if (NULL != et)

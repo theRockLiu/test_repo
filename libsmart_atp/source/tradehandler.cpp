@@ -11,26 +11,26 @@
 
 namespace satp
 {
-	class evt_helper: public smart_utils::event_base
-	{
-		public:
-			evt_helper(const dce_trade_engine::pointer_t &ptr)
-													: ptr_(ptr)
-			{
-			}
-			~evt_helper()
-			{
-			}
-
-		public:
-			void handle_event(uint64_t val)
-			{
-				ptr_->handle_evt(val);
-			}
-
-		private:
-			dce_trade_engine::pointer_t ptr_;
-	};
+//	class evt_helper: public smart_utils::event_base
+//	{
+//		public:
+//			evt_helper(const dce_trade_engine::pointer_t &ptr)
+//													: ptr_(ptr)
+//			{
+//			}
+//			~evt_helper()
+//			{
+//			}
+//
+//		public:
+//			void handle_event(uint64_t val)
+//			{
+//				ptr_->handle_evt(val);
+//			}
+//
+//		private:
+//			dce_trade_engine::pointer_t ptr_;
+//	};
 
 	dce_trade_engine::dce_trade_engine()
 											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0), conn_state_(CONN_CLOSED), is_logged_(false)
@@ -237,6 +237,7 @@ namespace satp
 		SU_ASSERT(CHAIN_SINGLE == bChainFlag);
 
 		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
 		evt->id_ = EVT_ORDER_STATUS;
 		evt->body_.osr_.sys_no_ = orderstatus.SysOrderNo;
 		evt->body_.osr_.local_no_ = orderstatus.LocalOrderNo;
@@ -371,7 +372,7 @@ namespace satp
 
 	void dce_trade_engine::onChannelLost(const char* szErrMsg)
 	{
-		LOGGER()->error("conn closed: %s\n", szErrMsg);
+		LOGGER()->error("trade conn closed:%s, %s, %s\n", member_id_.c_str(), trader_no_.c_str(), szErrMsg);
 		evt_ptr_->notify(CONN_CLOSED);
 	}
 

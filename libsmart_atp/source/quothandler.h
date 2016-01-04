@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <base/base.h>
+#include <utils/notifiers.h>
 using namespace smart_utils;
 
 #include "../apis/dce/Linux/quot/lib/QuotAPI.h"
@@ -39,27 +40,39 @@ namespace satp
 			///timer_base
 			void handle_timeout(uint64_t times);
 
-			///quot_api
-			virtual int onRspQuotUserLogout(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldTraderLogoutRsp & traderlogoutrsp, BYTE bChainFlag =
-			CHAIN_SINGLE);
-			virtual int onRspQryQuotRight(UINT4 nSeqNo, const _fldRspMsg & rspmsg, CAPIVector<_fldQuotSubsRight> & lstQuotSubsRight, BYTE bChainFlag =
-			CHAIN_SINGLE);
-			virtual int onRspUpdQuotRight(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldQuotSubsRight & quotsubsright, BYTE bChainFlag =
-			CHAIN_SINGLE);
-			///the func
-			virtual int onMarketDataMBLQuot(UINT4 nSeqNo, const _fldBestQuot & bestquot, CAPIVector<_fldOptPara> & lstOptPara, CAPIVector<_fldMBLQuot> & lstMBLQuot, BYTE bChainFlag = CHAIN_SINGLE);
-			///the func
-			virtual int onMarketDataArbiMBLQuot(UINT4 nSeqNo, const _fldArbiBestQuot & arbibestquot, CAPIVector<_fldMBLQuot> & lstMBLQuot, BYTE bChainFlag = CHAIN_SINGLE);
-			virtual int onRspQuotTraderPwdUpd(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldTraderPwdUpdReq & traderpwdupdreq, BYTE bChainFlag =
-			CHAIN_SINGLE);
-			virtual int onNtyCloseMktNotice(UINT4 nSeqNo, const _fldMktDataNotice & mktdatanotice, BYTE bChainFlag =
-			CHAIN_SINGLE);
-			virtual int onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char *pAddr);
-			virtual void onChannelLost(const char *szErrMsg);
+			///quot api
+			int onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char *pAddr);
+			int onRspQuotUserLogout(UINT4 nSeqNo, const _fldRspMsg & rspmsg, const _fldTraderLogoutRsp & traderlogoutrsp, BYTE bChainFlag = CHAIN_SINGLE);
+			int onMarketDataMBLQuot(UINT4 nSeqNo, const _fldBestQuot & bestquot, CAPIVector<_fldOptPara> & lstOptPara, CAPIVector<_fldMBLQuot> & lstMBLQuot, BYTE bChainFlag = CHAIN_SINGLE);
+			int onMarketDataArbiMBLQuot(UINT4 nSeqNo, const _fldArbiBestQuot & arbibestquot, CAPIVector<_fldMBLQuot> & lstMBLQuot, BYTE bChainFlag = CHAIN_SINGLE);
+			int onNtyCloseMktNotice(UINT4 nSeqNo, const _fldMktDataNotice & mktdatanotice, BYTE bChainFlag = CHAIN_SINGLE);
+			void onChannelLost(const char *szErrMsg);
 
 		private:
-			bool init_;
-			volatile bool conn_ok_;
+			bool is_logged_;
+			enum
+			{
+				CONN_CLOSED = 0, CONN_OPENING = 1, CONN_OPENED = 2
+			};
+			uint8_t conn_state_ __attribute__ ((aligned (64)));
+			bool is_logged_;
+
+			struct addr
+			{
+					string_t ip;
+					uint16_t port;
+			};
+
+			std::vector<addr> fens_addrs_;
+			std::vector<addr> gw_addrs_;
+			string_t member_id_;
+			string_t trader_no_;
+			string_t program_id_;
+			string_t program_ver_;
+			string_t passwd_;
+			_fldTraderLoginRsp loginrsp_;
+			smart_utils::event_base::pointer_t evt_ptr_;
+			smart_utils::smart_llrb llrb_;
 	};
 
 } /* namespace qtp_bl */

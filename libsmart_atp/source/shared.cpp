@@ -257,6 +257,7 @@ namespace satp
 			}
 			default:
 			{
+				SU_ASSERT(false);
 				break;
 			}
 		}
