@@ -12,7 +12,7 @@
 namespace satp
 {
 	dce_quot_engine::dce_quot_engine()
-											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0), init_(false), conn_ok_(false)
+											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0)
 	{
 		// TODO Auto-generated constructor stub
 	}
@@ -24,16 +24,7 @@ namespace satp
 
 	int dce_quot_engine::onRspQuotUserLogout(UINT4 nSeqNo, const _fldRspMsg& rspmsg, const _fldTraderLogoutRsp& traderlogoutrsp, BYTE bChainFlag)
 	{
-		return 0;
-	}
-
-	int dce_quot_engine::onRspQryQuotRight(UINT4 nSeqNo, const _fldRspMsg& rspmsg, CAPIVector<_fldQuotSubsRight>& lstQuotSubsRight, BYTE bChainFlag)
-	{
-		return 0;
-	}
-
-	int dce_quot_engine::onRspUpdQuotRight(UINT4 nSeqNo, const _fldRspMsg& rspmsg, const _fldQuotSubsRight& quotsubsright, BYTE bChainFlag)
-	{
+		LOGGER()->info("Got quot user logout rsp: %d, %s, %s\n", const_cast<_fldRspMsg&>(rspmsg).ErrCode, const_cast<_fldRspMsg&>(rspmsg).RspMsg.getValue(), const_cast<_fldRspMsg&>(rspmsg).TimeStamp.getValue());
 		return 0;
 	}
 
@@ -44,8 +35,8 @@ namespace satp
 		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
 
 		evt->id_ = EVT_L1_ARBI_QUOT;
-		memcpy(evt->body_.laq_.tm_, bestquot.GenTime.getValue(), bestquot.GenTime.Length());
-		evt->body_.laq_.contract_id_ = hash_str(bestquot.ArbiContractID.getValue());
+		memcpy(evt->body_.laq_.tm_, const_cast<_fldBestQuot&>(bestquot).GenTime.getValue(), const_cast<_fldBestQuot&>(bestquot).GenTime.Length());
+		evt->body_.laq_.contract_id_ = hash_str(const_cast<_fldBestQuot&>(bestquot).ContractID.getValue());
 		evt->body_.laq_.last_price_ = bestquot.LastPrice;
 		evt->body_.laq_.high_price_ = bestquot.HighPrice;
 		evt->body_.laq_.low_price_ = bestquot.LowPrice;
@@ -66,8 +57,8 @@ namespace satp
 		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
 
 		evt->id_ = EVT_L1_ARBI_QUOT;
-		memcpy(evt->body_.laq_.tm_, arbibestquot.GenTime.getValue(), arbibestquot.GenTime.Length());
-		evt->body_.laq_.contract_id_ = hash_str(arbibestquot.ArbiContractID.getValue());
+		memcpy(evt->body_.laq_.tm_, const_cast<_fldArbiBestQuot&>(arbibestquot).GenTime.getValue(), const_cast<_fldArbiBestQuot&>(arbibestquot).GenTime.Length());
+		evt->body_.laq_.contract_id_ = hash_str(const_cast<_fldArbiBestQuot&>(arbibestquot).ArbiContractID.getValue());
 		evt->body_.laq_.last_price_ = arbibestquot.LastPrice;
 		evt->body_.laq_.high_price_ = arbibestquot.HighPrice;
 		evt->body_.laq_.low_price_ = arbibestquot.LowPrice;
@@ -80,15 +71,15 @@ namespace satp
 
 		return 0;
 	}
-
-	int dce_quot_engine::onRspQuotTraderPwdUpd(UINT4 nSeqNo, const _fldRspMsg& rspmsg, const _fldTraderPwdUpdReq& traderpwdupdreq, BYTE bChainFlag)
-	{
-		return 0;
-	}
+//
+//	int dce_quot_engine::onRspQuotTraderPwdUpd(UINT4 nSeqNo, const _fldRspMsg& rspmsg, const _fldTraderPwdUpdReq& traderpwdupdreq, BYTE bChainFlag)
+//	{
+//		return 0;
+//	}
 
 	int dce_quot_engine::onNtyCloseMktNotice(UINT4 nSeqNo, const _fldMktDataNotice& mktdatanotice, BYTE bChainFlag)
 	{
-		LOGGER()->info("got market close msg: %s, %s, %s", mktdatanotice.Content.getValue(), mktdatanotice.Time.getValue(), mktdatanotice.Type.getValue());
+		LOGGER()->info("got market close msg: %s, %s, %s", const_cast<_fldMktDataNotice&>(mktdatanotice).Content.getValue(), const_cast<_fldMktDataNotice&>(mktdatanotice).Time.getValue(), const_cast<_fldMktDataNotice&>(mktdatanotice).Type.getValue());
 		return 0;
 	}
 

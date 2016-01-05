@@ -23,7 +23,7 @@ namespace satp
 		CONN_CLOSED = 1
 	};
 
-	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base, public std::enable_shared_from_this<dce_trade_engine>
+	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base//, public std::enable_shared_from_this<dce_trade_engine>
 	{
 		public:
 			typedef std::shared_ptr<satp::dce_trade_engine> pointer_t;

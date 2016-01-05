@@ -12,6 +12,7 @@
 
 #include <base/base.h>
 #include <utils/notifiers.h>
+#include <utils/llrbex.h>
 using namespace smart_utils;
 
 #include "../apis/dce/Linux/quot/lib/QuotAPI.h"
@@ -55,7 +56,6 @@ namespace satp
 				CONN_CLOSED = 0, CONN_OPENING = 1, CONN_OPENED = 2
 			};
 			uint8_t conn_state_ __attribute__ ((aligned (64)));
-			bool is_logged_;
 
 			struct addr
 			{

@@ -11,26 +11,21 @@
 
 namespace satp
 {
-//	class evt_helper: public smart_utils::event_base
-//	{
-//		public:
-//			evt_helper(const dce_trade_engine::pointer_t &ptr)
-//													: ptr_(ptr)
-//			{
-//			}
-//			~evt_helper()
-//			{
-//			}
-//
-//		public:
-//			void handle_event(uint64_t val)
-//			{
-//				ptr_->handle_evt(val);
-//			}
-//
-//		private:
-//			dce_trade_engine::pointer_t ptr_;
-//	};
+	class evt_helper: public smart_utils::event_base
+	{
+		public:
+			evt_helper()
+			{
+			}
+			~evt_helper()
+			{
+			}
+
+		public:
+			void handle_event(uint64_t val)
+			{
+			}
+	};
 
 	dce_trade_engine::dce_trade_engine()
 											: timer_base(smart_utils::timer_base::ETT_MONOTONIC, 5, 0), conn_state_(CONN_CLOSED), is_logged_(false)
@@ -92,7 +87,7 @@ namespace satp
 
 	int_fast8_t dce_trade_engine::init(const exc_info_t &ei, const std::vector<std::string> &contracts)
 	{
-		evt_ptr_ = std::make_shared<evt_helper>(shared_from_this());
+		evt_ptr_ = std::make_shared<evt_helper>();
 
 		for (auto &x : contracts)
 		{
@@ -109,11 +104,6 @@ namespace satp
 	{
 		return NULL;
 	}
-
-//	smart_utils::notifier::pointer_t dce_trade_engine::get_event()
-//	{
-//		return std::dynamic_pointer_cast<smart_utils::notifier, smart_utils::event_base>(evt_ptr_);
-//	}
 
 	int_fast8_t dce_trade_engine::async_send_cmd(cmd_t& cmd)
 	{
@@ -362,6 +352,8 @@ namespace satp
 		{
 			llrb_.writer_commit_bytes(1);
 		}
+
+		return 0;
 	}
 
 	int dce_trade_engine::onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char* pAddr)
