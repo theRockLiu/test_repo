@@ -246,7 +246,7 @@ public:
 	///
 	bool is_opened();
 	void async_add_notifier(notifier::pointer_t &pEvtHandler);
-	void async_remove_notifier(notifier::pointer_t &pEvtHandler);
+	void async_rem_notifier(notifier::pointer_t &pEvtHandler);
 	void check_once(int32_t TimeoutMS = -1);
 private:
 	///

@@ -17,6 +17,14 @@ using namespace smart_utils;
 #include "quothandler.h"
 #include "tradehandler.h"
 
+namespace
+{
+	void ne_func()
+	{
+		SHARED().exec();
+	}
+}
+
 namespace satp
 {
 	shared::shared()
@@ -30,36 +38,7 @@ namespace satp
 		// TODO Auto-generated destructor stub
 	}
 
-//int_fast32_t shared::async_send_command(trade_cmd_t& tc)
-//{
-//	if (ATP_ORDER_CMD == tc.cid)
-//	{
-//		dce_orders_[0].LocalOrderNo = dce_local_no_gen_++;
-//		return dce_th_.ReqTraderInsertOrders(NULL, dce_orders_);
-//	}
-//	else if (ATP_CANCEL_CMD == tc.cid)
-//	{
-//		dce_cancel_.LocalOrderNo = dce_local_no_gen_++;
-//		return dce_th_.ReqTraderCancelOrder(NULL, dce_cancel_);
-//	}
-//	else
-//	{
-//		SU_CHECK(false);
-//	}
-//
-//	return SU_EC_SUC;
-//}
-
-	void shared::exec()
-	{
-//	///check trade conn
-//	dth_.check_conn();
-//
-//	///check quot conn
-//	dqh_.check_conn();
-	}
-
-	int_fast32_t shared::init(const string_t cf)
+	int_fast8_t shared::init(const string_t cf)
 	{
 		///init log
 		try
@@ -153,43 +132,27 @@ namespace satp
 		return SU_EC_SUC;
 	}
 
-	int_fast8_t algo_trade_platform::init()
+	int_fast8_t shared::start()
 	{
-		return 0;
+		ne_thread_ = std::make_shared<std::thread>(ne_func);
 	}
 
-//int_fast32_t algo_trade_platform::reg_algo(algo_base::pointer_t& algos,
-//		std::vector<std::string>& contract_ids)
-//{
-//	return 0;
-//}
-
-//int_fast32_t algo_trade_platform::run_and_wait()
-//{
-//	return SHARED().run_and_wait();
-//}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-//int_fast32_t algo_base::async_send_cmd(trade_cmd_t &tc)
-//{
-//	////
-//	return SHARED().async_send_command(tc);
-//}
-
-	int_fast32_t shared::run_and_wait()
+	void shared::exec()
 	{
-		while (r_flag_)
+		while (SU_AO(r_flag_))
 		{
 			ne_.check_once(1);
 		}
-
-		return SU_EC_SUC;
 	}
 
-//	void check_conn_timer::handle_timeout(uint64_t times)
-//	{
-//		SHARED().handle_timeout(times);
-//	}
+	int_fast8_t shared::stop()
+	{
+		SU_AO(r_flag_) = false;
+		ne_thread_->join();
+		ne_thread_ = nullptr;
+
+		return 0;
+	}
 
 	int_fast8_t shared::add_quot_engine(quot_engine::pointer_t &qe)
 	{
@@ -200,8 +163,12 @@ namespace satp
 		return EC_SUC;
 	}
 
-	int_fast8_t shared::rem_quot_engine(quot_engine::pointer_t&)
+	int_fast8_t shared::rem_quot_engine(quot_engine::pointer_t &qe)
 	{
+		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, quot_engine>(qe);
+		SU_ASSERT(nullptr != ptr);
+
+		ne_.async_rem_notifier(ptr);
 		return 0;
 	}
 
@@ -211,30 +178,36 @@ namespace satp
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_add_notifier(ptr);
-
-//		satp::dce_trade_engine::pointer_t ptra = std::dynamic_pointer_cast<satp::dce_trade_engine, satp::trade_engine>(te);
-//		ne_.async_add_notifier(ptra->get_event());
-
 		return EC_SUC;
 	}
 
-	int_fast8_t shared::rem_trade_engine(trade_engine::pointer_t&)
+	int_fast8_t shared::rem_trade_engine(trade_engine::pointer_t &te)
 	{
+		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, trade_engine>(te);
+		SU_ASSERT(nullptr != ptr);
+
+		ne_.async_rem_notifier(ptr);
 		return 0;
 	}
-
-//	void shared::exec()
-//	{
-//		ne_.check_once();
-//	}
 
 	int_fast8_t shared::destroy()
 	{
 		return 0;
 	}
 
-	void shared::handle_timeout(uint64_t times)
+	int_fast8_t algo_trade_platform::init(const string_t &cf)
 	{
+		return SHARED().init(cf);
+	}
+
+	int_fast8_t algo_trade_platform::start()
+	{
+		return SHARED().start();
+	}
+
+	int_fast8_t algo_trade_platform::stop()
+	{
+		return SHARED().stop();
 	}
 
 	quot_engine::pointer_t algo_trade_platform::create_quot_engine(const exc_info_t& ei, const std::vector<std::string> &contracts)

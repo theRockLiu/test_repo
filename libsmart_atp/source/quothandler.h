@@ -17,7 +17,6 @@ using namespace smart_utils;
 
 #include "../apis/dce/Linux/quot/lib/QuotAPI.h"
 #include "../include/atp.h"
-#include "../include/data.h"
 
 namespace satp
 {

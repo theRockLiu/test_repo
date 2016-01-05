@@ -13,9 +13,10 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-
 #include <base/types.h>
-#include "../include/data.h"
+
+#define LLRB_SIZE (1024 * 1024 * 1024)
+#define ELEM_SIZE (256)
 
 namespace satp
 {
@@ -236,15 +237,9 @@ namespace satp
 			}
 
 		public:
-			int_fast8_t init();
-			int_fast8_t start()
-			{
-				return 0;
-			}
-			int_fast8_t stop()
-			{
-				return 0;
-			}
+			int_fast8_t init(const string_t &cf);
+			int_fast8_t start();
+			int_fast8_t stop();
 			quot_engine::pointer_t create_quot_engine(const exc_info_t &ei, const std::vector<std::string> &contracts);
 			trade_engine::pointer_t create_trade_engine(const exc_info_t &ei, const std::vector<std::string> &contracts);
 	};

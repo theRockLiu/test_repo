@@ -41,7 +41,7 @@ namespace smart_utils
 		tmp_add_notifiers_.push_back(pEvtHandler);
 	}
 
-	void notifier_engine::async_remove_notifier(notifier::pointer_t& pEvtHandler)
+	void notifier_engine::async_rem_notifier(notifier::pointer_t& pEvtHandler)
 	{
 		std::lock_guard<std::mutex> lock(tmp_notifier_remove_mtx_);
 		if (!is_opened())

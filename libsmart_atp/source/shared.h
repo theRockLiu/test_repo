@@ -10,6 +10,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <thread>
+#include <memory>
 
 #include <log/spdlog/include/spdlog/spdlog.h>
 namespace spd = spdlog;
@@ -28,18 +30,21 @@ namespace satp
 	{
 		public:
 			shared();
-			virtual ~shared();
+			~shared();
 
 		public:
-			int_fast32_t init(const string_t cf);
+			int_fast8_t init(const string_t cf);
+			int_fast8_t start();
 			void exec();
+			int_fast8_t stop();
 			int_fast8_t destroy();
+			///
 			int_fast8_t add_quot_engine(quot_engine::pointer_t&);
 			int_fast8_t rem_quot_engine(quot_engine::pointer_t&);
 			int_fast8_t add_trade_engine(trade_engine::pointer_t&);
 			int_fast8_t rem_trade_engine(trade_engine::pointer_t&);
+			///
 			int_fast32_t run_and_wait();
-			void handle_timeout(uint64_t times);
 			inline std::shared_ptr<spd::logger>& get_logger()
 			{
 				return af_logger_;
@@ -52,6 +57,8 @@ namespace satp
 			std::shared_ptr<spd::logger> c_logger_, af_logger_;
 			///notifiers...
 			smart_utils::notifier_engine ne_;
+			///thread
+			std::shared_ptr<std::thread> ne_thread_;
 	};
 
 #define SHARED() (smart_utils::singleton<satp::shared>::inst())
