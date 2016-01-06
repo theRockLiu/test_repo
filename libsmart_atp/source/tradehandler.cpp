@@ -91,10 +91,11 @@ namespace satp
 
 		for (auto &x : contracts)
 		{
-			struct sample s;
+			struct contract_info s;
 			strncpy(s.send_req_[0].ContractID.buf, x.c_str(), s.send_req_[0].ContractID.Length());
 			strncpy(s.withdraw_req_.ContractID.buf, x.c_str(), s.withdraw_req_.ContractID.Length());
-			samples_[hash_str(x.c_str())] = s;
+			s.contract_id_ = x;
+			contract_infos_[hash_str(x.c_str())] = s;
 		}
 
 		return llrb_.init(LLRB_SIZE, ELEM_SIZE);
@@ -111,7 +112,7 @@ namespace satp
 		{
 			case EVT_SEND_ORDER_REQ:
 			{
-				struct sample &x = samples_[cmd.body_.sor_.cid_];
+				struct contract_info &x = contract_infos_[cmd.body_.sor_.cid_];
 				x.send_req_[0].Price = cmd.body_.sor_.price_;
 
 				uint32_t seqno = 0;
@@ -119,7 +120,7 @@ namespace satp
 			}
 			case EVT_WITHDRAW_ORDER_REQ:
 			{
-				struct sample &x = samples_[cmd.body_.wor_.cid_];
+				struct contract_info &x = contract_infos_[cmd.body_.wor_.cid_];
 				x.withdraw_req_.SysOrderNo = cmd.body_.wor_.sys_no_;
 
 				uint32_t seqno = 0;
@@ -210,6 +211,44 @@ namespace satp
 		{
 			LOGGER()->error("login trade sys failed: %d\n", ret);
 			return;
+		}
+
+		CAPIVector<_fldFtrContract> *contract_info = nullptr;
+		CAPIVector<_fldArbiContract> *arbi_contract_info = nullptr;
+		CAPIVector<_fldArbiLeg> *arbi_contract_leg = nullptr;
+		for (auto &x : contract_infos_)
+		{
+			contract_info = nullptr;
+			_fldContractQryReq req = { 0 };
+			strncpy(req.ContractID.buf, x.second.contract_id_.c_str(), req.ContractID.Length());
+			ZERO_BYTES(&(x.second.contract_info_), sizeof(_fldFtrContract));
+			ZERO_BYTES(&(x.second.arbi_contract_info_), sizeof(_fldArbiContract));
+			ret = QryFtrContr(req, &rsp, &contract_info);
+			if (0 != ret)
+			{
+				LOGGER()->error("query base contract info failed : %s, %d, %s\n", req.ContractID.getValue(), rsp.ErrCode, rsp.RspMsg.getValue());
+				ret = QryArbiContr(req, &rsp, &arbi_contract_info, &arbi_contract_leg);
+				if (0 != ret)
+				{
+					LOGGER()->error("query arbi contract info failed : %s, %d, %s\n", req.ContractID.getValue(), rsp.ErrCode, rsp.RspMsg.getValue());
+					LOGGER()->flush();
+					SU_ASSERT(false);
+				}
+				else
+				{
+					SU_ASSERT(arbi_contract_info != nullptr);
+					SU_ASSERT(arbi_contract_info->GetCount() == 1);
+					x.second.arbi_contract_info_ = (*arbi_contract_info)[0];
+					x.second.arbi_flag_ = true;
+				}
+			}
+			else
+			{
+				SU_ASSERT(contract_info != nullptr);
+				SU_ASSERT(contract_info->GetCount() == 1);
+				x.second.contract_info_ = (*contract_info)[0];
+				x.second.arbi_flag_ = false;
+			}
 		}
 
 		Ready(READY, READY, true);

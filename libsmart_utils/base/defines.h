@@ -75,5 +75,7 @@
 #define ROUND_UP(p, align)   (((p)+(align)-1u) & ~((align)-1u))
 
 
+#define ZERO_BYTES(addr, sz) (memset(addr, 0, sz))
+
 
 #endif /* UTILS_DEFINES_H_ */

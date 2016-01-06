@@ -195,6 +195,8 @@ namespace satp
 		return 0;
 	}
 
+
+	///////////////////////////////////////////////////////////////////////////////////////////
 	int_fast8_t algo_trade_platform::init(const string_t &cf)
 	{
 		return SHARED().init(cf);

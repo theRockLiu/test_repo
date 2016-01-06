@@ -7,25 +7,19 @@ CPP_SRCS += \
 ../source/campservice.cpp \
 ../source/quothandler.cpp \
 ../source/shared.cpp \
-../source/shared_test.cpp \
-../source/tradehandler.cpp \
-../source/ull_qtp.cpp 
+../source/tradehandler.cpp 
 
 OBJS += \
 ./source/campservice.o \
 ./source/quothandler.o \
 ./source/shared.o \
-./source/shared_test.o \
-./source/tradehandler.o \
-./source/ull_qtp.o 
+./source/tradehandler.o 
 
 CPP_DEPS += \
 ./source/campservice.d \
 ./source/quothandler.d \
 ./source/shared.d \
-./source/shared_test.d \
-./source/tradehandler.d \
-./source/ull_qtp.d 
+./source/tradehandler.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

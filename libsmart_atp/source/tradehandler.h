@@ -23,7 +23,7 @@ namespace satp
 		CONN_CLOSED = 1
 	};
 
-	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base//, public std::enable_shared_from_this<dce_trade_engine>
+	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base //, public std::enable_shared_from_this<dce_trade_engine>
 	{
 		public:
 			typedef std::shared_ptr<satp::dce_trade_engine> pointer_t;
@@ -76,12 +76,18 @@ namespace satp
 			_fldTraderLoginRsp loginrsp_;
 			smart_utils::event_base::pointer_t evt_ptr_;
 			smart_utils::smart_llrb llrb_;
-			struct sample
+			struct contract_info
 			{
 					CAPIVector<_fldOrder> send_req_;
 					_fldOrderAction withdraw_req_;
+					_fldFtrContract contract_info_;
+					_fldArbiContract arbi_contract_info_;
+					string_t contract_id_;
+					bool arbi_flag_;
 			};
-			std::unordered_map<uint64_t, struct sample> samples_;
+			std::unordered_map<uint64_t, struct contract_info> contract_infos_;
+
+			//std::vector<string_t> contracts_;
 	};
 
 } /* namespace qtp_bl */
