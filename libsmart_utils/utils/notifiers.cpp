@@ -21,16 +21,16 @@
 namespace smart_utils
 {
 
-	notifier_engine::notifier_engine()
+	notifiers_engine::notifiers_engine()
 											: epfd_(-1)
 	{
 	}
 
-	notifier_engine::~notifier_engine()
+	notifiers_engine::~notifiers_engine()
 	{
 	}
 
-	void notifier_engine::async_add_notifier(notifier::pointer_t& pEvtHandler)
+	void notifiers_engine::async_add_notifier(notifier_interface::pointer_t& pEvtHandler)
 	{
 		std::lock_guard<std::mutex> lock(tmp_notifier_add_mtx_);
 		if (!is_opened())
@@ -41,7 +41,7 @@ namespace smart_utils
 		tmp_add_notifiers_.push_back(pEvtHandler);
 	}
 
-	void notifier_engine::async_rem_notifier(notifier::pointer_t& pEvtHandler)
+	void notifiers_engine::async_rem_notifier(notifier_interface::pointer_t& pEvtHandler)
 	{
 		std::lock_guard<std::mutex> lock(tmp_notifier_remove_mtx_);
 		if (!is_opened())
@@ -53,7 +53,7 @@ namespace smart_utils
 	}
 
 #define MAX_EVENTS (100)
-	void notifier_engine::check_once(int32_t TimeoutMS)
+	void notifiers_engine::check_once(int32_t TimeoutMS)
 	{
 		if (!is_opened())
 		{
@@ -63,7 +63,7 @@ namespace smart_utils
 
 		if (!tmp_remove_notifiers_.empty())
 		{
-			std::vector<notifier::pointer_t> TmpVec;
+			std::vector<notifier_interface::pointer_t> TmpVec;
 
 			{
 				std::lock_guard<std::mutex> lock(tmp_notifier_remove_mtx_);
@@ -113,7 +113,7 @@ namespace smart_utils
 
 		for (int32_t n = 0; n < nfds; ++n)
 		{
-			notifier* pHandler = static_cast<notifier*>(events[n].data.ptr);
+			notifier_interface* pHandler = static_cast<notifier_interface*>(events[n].data.ptr);
 			SU_CHECK(NULL != pHandler);
 			pHandler->handle_events(events[n].events);
 		}
@@ -122,13 +122,13 @@ namespace smart_utils
 
 	const int64_t NANOS_OF_ONE_SECONDS = (1000 * 1000 * 1000);
 
-	timer_base::timer_base(const ETimerType tt, int64_t interval_seconds, int64_t interval_nanos)
+	timer_notifier::timer_notifier(const ETimerType tt, int64_t interval_seconds, int64_t interval_nanos)
 											: fd_(-1), timer_type_(tt), init_expire_s_(interval_seconds), init_expire_ns_(interval_nanos), interval_s_(interval_seconds), interval_ns_(interval_nanos)
 	{
 
 	}
 
-	timer_base::~timer_base()
+	timer_notifier::~timer_notifier()
 	{
 		if (-1 == fd_)
 		{
@@ -136,7 +136,7 @@ namespace smart_utils
 		}
 	}
 
-	int32_t timer_base::open()
+	int32_t timer_notifier::open(bool flag)
 	{
 
 		SU_CHECK(init_expire_ns_ < NANOS_OF_ONE_SECONDS && interval_ns_ < NANOS_OF_ONE_SECONDS);
@@ -179,7 +179,7 @@ namespace smart_utils
 
 	}
 
-	int32_t timer_base::close()
+	int32_t timer_notifier::close()
 	{
 		SU_CHECK(-1 == fd_);
 		::close(fd_);
@@ -188,12 +188,12 @@ namespace smart_utils
 		return SU_EC_ERR;
 	}
 
-	uint32_t timer_base::get_events()
+	uint32_t timer_notifier::get_events()
 	{
 		return EPOLLIN;
 	}
 
-	void timer_base::handle_events(uint32_t events)
+	void timer_notifier::handle_events(uint32_t events)
 	{
 		SU_CHECK(EPOLLIN == events);
 
@@ -208,7 +208,7 @@ namespace smart_utils
 		handle_timeout(times);
 	}
 
-	int32_t notifier_engine::open()
+	int32_t notifiers_engine::open()
 	{
 		std::lock_guard<std::mutex> A(tmp_notifier_remove_mtx_);
 		std::lock_guard<std::mutex> B(tmp_notifier_add_mtx_);
@@ -229,7 +229,7 @@ namespace smart_utils
 		return ((epfd_ = epoll_create(MAX_EVENTS)) == -1 ? SU_EC_ERR : SU_EC_SUC);
 	}
 
-	int32_t notifier_engine::close()
+	int32_t notifiers_engine::close()
 	{
 		std::lock_guard<std::mutex> A(tmp_notifier_remove_mtx_);
 		std::lock_guard<std::mutex> B(tmp_notifier_add_mtx_);
@@ -248,27 +248,27 @@ namespace smart_utils
 		return SU_EC_SUC;
 	}
 
-	bool notifier_engine::is_opened()
+	bool notifiers_engine::is_opened()
 	{
 		return !(-1 == epfd_);
 	}
 
-	event_base::event_base()
+	event_notifier::event_notifier()
 											: fd_(-1)
 	{
 	}
 
-	event_base::~event_base()
+	event_notifier::~event_notifier()
 	{
 		close();
 	}
 
-	int32_t event_base::open()
+	int32_t event_notifier::open(bool nonblock)
 	{
-		return (fd_ = eventfd(0, EFD_NONBLOCK)) == -1 ? SU_EC_ERR : SU_EC_SUC;
+		return (fd_ = eventfd(0, nonblock ? EFD_NONBLOCK : 0)) == -1 ? SU_EC_ERR : SU_EC_SUC;
 	}
 
-	int32_t event_base::close()
+	int32_t event_notifier::close()
 	{
 		if (-1 != fd_)
 		{
@@ -281,17 +281,17 @@ namespace smart_utils
 		return SU_EC_ERR;
 	}
 
-	uint32_t event_base::get_events()
+	uint32_t event_notifier::get_events()
 	{
 		return EPOLLIN;
 	}
 
-	void event_base::notify(uint64_t val)
+	void event_notifier::notify(uint64_t val)
 	{
 		write(fd_, &val, sizeof(uint64_t));
 	}
 
-	void event_base::handle_events(uint32_t evts)
+	void event_notifier::handle_events(uint32_t evts)
 	{
 		SU_CHECK(EPOLLIN == evts);
 
@@ -306,7 +306,7 @@ namespace smart_utils
 		handle_event(val);
 	}
 
-	int_fast8_t event_base::wait_evt()
+	int_fast8_t event_notifier::wait_evt()
 	{
 		uint64_t val = 0;
 		ssize_t s = read(fd_, &val, sizeof(uint64_t));
@@ -314,16 +314,16 @@ namespace smart_utils
 		return s < 0 ? -1 : 0;
 	}
 
-	signal_base::signal_base(std::vector<int32_t> &&vec)
+	signal_notifier::signal_notifier(std::vector<int32_t> &&vec)
 											: signals_(vec)
 	{
 	}
 
-	signal_base::~signal_base()
+	signal_notifier::~signal_notifier()
 	{
 	}
 
-	int32_t signal_base::open()
+	int32_t signal_notifier::open(bool flag)
 	{
 		sigset_t mask;
 		sigemptyset(&mask);
@@ -350,19 +350,19 @@ namespace smart_utils
 		return SU_EC_SUC;
 	}
 
-	int32_t signal_base::close()
+	int32_t signal_notifier::close()
 	{
 		SAFE_CLOSE_FD(fd_)
 
 		return SU_EC_SUC;
 	}
 
-	uint32_t signal_base::get_events()
+	uint32_t signal_notifier::get_events()
 	{
 		return EPOLLIN;
 	}
 
-	void signal_base::handle_events(uint32_t evts)
+	void signal_notifier::handle_events(uint32_t evts)
 	{
 		//std::cout<<"get signal"<<std::endl;
 		struct signalfd_siginfo fdsi;
@@ -380,9 +380,9 @@ namespace smart_utils
 		}
 	}
 
-	int32_t tcp_sock_accepter::open()
+	int32_t tcp_sock_accept_notifier::open(bool nonblock)
 	{
-		sock_ = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+		sock_ = socket(AF_INET, SOCK_STREAM | (nonblock ? SOCK_NONBLOCK : 0), 0);
 		if (-1 == sock_)
 		{
 			return -1;
@@ -406,7 +406,7 @@ namespace smart_utils
 		return 0;
 	}
 
-	int32_t tcp_sock_accepter::close()
+	int32_t tcp_sock_accept_notifier::close()
 	{
 		::close(sock_);
 		sock_ = -1;
@@ -414,37 +414,37 @@ namespace smart_utils
 		return 0;
 	}
 
-	void tcp_sock_accepter::on_added(bool Suc)
+	void tcp_sock_accept_notifier::on_added(bool Suc)
 	{
 		SU_CHECK(Suc);
 	}
 
-	void tcp_sock_accepter::on_removed(bool Suc)
+	void tcp_sock_accept_notifier::on_removed(bool Suc)
 	{
 		SU_CHECK(Suc);
 	}
 
-	int32_t tcp_sock_accepter::get_fd()
+	int32_t tcp_sock_accept_notifier::get_fd()
 	{
 		return sock_;
 	}
 
-	uint32_t tcp_sock_accepter::get_events()
+	uint32_t tcp_sock_accept_notifier::get_events()
 	{
 		return EPOLLIN;
 	}
 
-	tcp_sock_accepter::tcp_sock_accepter(std::string &bind_ip, uint_fast16_t bind_port)
+	tcp_sock_accept_notifier::tcp_sock_accept_notifier(std::string &bind_ip, uint_fast16_t bind_port)
 											: sock_(-1), bind_ip_(bind_ip), bind_port_(bind_port)
 	{
 	}
 
-	tcp_sock_accepter::~tcp_sock_accepter()
+	tcp_sock_accept_notifier::~tcp_sock_accept_notifier()
 	{
 		close();
 	}
 
-	void tcp_sock_accepter::handle_events(uint32_t evts)
+	void tcp_sock_accept_notifier::handle_events(uint32_t evts)
 	{
 		SU_CHECK(EPOLLIN == evts);
 		sockaddr_in addr = { 0 };
@@ -455,51 +455,51 @@ namespace smart_utils
 		handle_new_conn(sock, std::string(inet_ntoa(addr.sin_addr)), ntohs(addr.sin_port));
 	}
 
-	tcp_sock::tcp_sock(int_fast32_t sock)
+	tcp_sock_notifier::tcp_sock_notifier(int_fast32_t sock)
 											: sock_(sock)
 	{
 	}
 
-	tcp_sock::~tcp_sock()
+	tcp_sock_notifier::~tcp_sock_notifier()
 	{
 		close();
 	}
 
-	int32_t tcp_sock::open()
+	int32_t tcp_sock_notifier::open(bool flag)
 	{
 		SU_CHECK(sock_ >= 0);
 
 		return 0;
 	}
 
-	int32_t tcp_sock::close()
+	int32_t tcp_sock_notifier::close()
 	{
 		SAFE_CLOSE_FD(sock_);
 
 		return 0;
 	}
 
-	void tcp_sock::on_added(bool Suc)
+	void tcp_sock_notifier::on_added(bool Suc)
 	{
 		SU_CHECK(Suc);
 	}
 
-	void tcp_sock::on_removed(bool Suc)
+	void tcp_sock_notifier::on_removed(bool Suc)
 	{
 		SU_CHECK(Suc);
 	}
 
-	int32_t tcp_sock::get_fd()
+	int32_t tcp_sock_notifier::get_fd()
 	{
 		return sock_;
 	}
 
-	uint32_t tcp_sock::get_events()
+	uint32_t tcp_sock_notifier::get_events()
 	{
 		return EPOLLIN;
 	}
 
-	void tcp_sock::handle_events(uint32_t evts)
+	void tcp_sock_notifier::handle_events(uint32_t evts)
 	{
 		SU_CHECK(EPOLLIN == evts);
 		///TheRock: very ugly, but u know i will todo it.

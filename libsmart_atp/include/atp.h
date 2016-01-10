@@ -39,10 +39,10 @@ namespace satp
 			EC_SUC = 0
 	};
 
-	enum exchanges
+	enum engine_type
 		: uint8_t
 		{
-			EX_DCE = 0, EX_SSE = 1
+			ET_DCE_TRADE = 0, ET_DCE_L1_QUOT, ET_DCE_L2_QUOT, EX_SSE
 	};
 
 	enum trade_type
@@ -64,15 +64,23 @@ namespace satp
 		EVT_L1_ARBI_QUOT,
 		EVT_L2_BASE_QUOT,
 		EVT_L2_ARBI_QUOT,
-		EVT_SEND_ORDER_REQ,
+		EVT_SEND_BASE_ORDER_REQ,
+		EVT_SEND_ARBI_ORDER_REQ,
 		EVT_SEND_ORDER_RSP,
-		EVT_WITHDRAW_ORDER_REQ,
+		EVT_WITHDRAW_BASE_ORDER_REQ,
+		EVT_WITHDRAW_ARBI_ORDER_REQ,
 		EVT_WITHDRAW_ORDER_RSP,
 		EVT_MATCH_RSP,
 		EVT_MARKET_STATUS,
 		EVT_VARIETY_STATUS,
 		EVT_ORDER_STATUS,
 		EVT_CNT
+	};
+
+	enum error_code
+		: int16_t
+		{
+			RET_SUC = 0
 	};
 
 	struct variety_status_rsp
@@ -159,13 +167,12 @@ namespace satp
 			} body_;
 	} evt_t;
 
-	typedef struct exchange_info
+	typedef struct engine_info
 	{
-			uint32_t id_ :8;
 			string_t server_ip_;
 			uint32_t server_port_ :16;
 
-	} exc_info_t;
+	} engine_info_t;
 
 	typedef struct trade_cmd
 	{
@@ -175,7 +182,7 @@ namespace satp
 			{
 					struct send_order_req
 					{
-							uint64_t cid_;
+							uint64_t contract_id_;
 							double price_;
 					} sor_;
 
@@ -185,44 +192,54 @@ namespace satp
 							uint32_t sys_no_;
 					} wor_;
 			} body_;
-	} cmd_t;
+	} trade_cmd_t;
 
-	////
-	class quot_engine
+	/**
+	 *
+	 * */
+	class quot_engine_interface
 	{
 		public:
-			typedef std::shared_ptr<satp::quot_engine> pointer_t;
+			typedef std::shared_ptr<satp::quot_engine_interface> pointer_t;
 		public:
-			quot_engine()
+			quot_engine_interface()
 			{
 			}
-			virtual ~quot_engine()
+			virtual ~quot_engine_interface()
 			{
 			}
 
 		public:
-			virtual int_fast8_t init(const exc_info_t &ei, const std::vector<std::string> &contracts) = 0;
+			virtual int_fast8_t init(const engine_info_t &ei) = 0;
 			virtual evt_t* get_evt() = 0;
+			virtual void done() = 0;
 	};
 
-	class trade_engine
+	/**
+	 *
+	 * */
+	class trade_engine_interface
 	{
 		public:
-			typedef std::shared_ptr<satp::trade_engine> pointer_t;
+			typedef std::shared_ptr<satp::trade_engine_interface> pointer_t;
 		public:
-			trade_engine()
+			trade_engine_interface()
 			{
 			}
-			virtual ~trade_engine()
+			virtual ~trade_engine_interface()
 			{
 			}
 
 		public:
-			virtual int_fast8_t init(const exc_info_t &ei, const std::vector<std::string> &contracts) = 0;
+			virtual int_fast8_t init(const engine_info_t &ei) = 0;
 			virtual evt_t* get_evt() = 0;
-			virtual int_fast8_t async_send_cmd(cmd_t&) = 0;
+			virtual void done() = 0;
+			virtual int_fast8_t async_send_cmd(trade_cmd_t&) = 0;
 	};
 
+	/**
+	 * algorithm trade platform
+	 * */
 	class algo_trade_platform
 	{
 		public:
@@ -240,8 +257,8 @@ namespace satp
 			int_fast8_t init(const string_t &cf);
 			int_fast8_t start();
 			int_fast8_t stop();
-			quot_engine::pointer_t create_quot_engine(const exc_info_t &ei, const std::vector<std::string> &contracts);
-			trade_engine::pointer_t create_trade_engine(const exc_info_t &ei, const std::vector<std::string> &contracts);
+			quot_engine_interface::pointer_t create_quot_engine(enum engine_type et);
+			trade_engine_interface::pointer_t create_trade_engine(enum engine_type et);
 	};
 }
 

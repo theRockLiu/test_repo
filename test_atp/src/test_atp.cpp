@@ -44,7 +44,7 @@ class my_algo1
 		{
 		}
 
-		void init(satp::quot_engine::pointer_t &qe, satp::trade_engine::pointer_t &te)
+		void init(satp::quot_engine_interface::pointer_t &qe, satp::trade_engine_interface::pointer_t &te)
 		{
 			dce_qe_ = qe;
 			dce_te_ = te;
@@ -84,8 +84,8 @@ class my_algo1
 		}
 
 	private:
-		satp::quot_engine::pointer_t dce_qe_;
-		satp::trade_engine::pointer_t dce_te_;
+		satp::quot_engine_interface::pointer_t dce_qe_;
+		satp::trade_engine_interface::pointer_t dce_te_;
 		///satp::trade_engine::pointer_t sq_te_;
 		struct evt_handler evt_handlers_[EVT_CNT];
 };
@@ -94,15 +94,18 @@ int main()
 {
 	///init
 	satp::algo_trade_platform ap;
-	ap.init();
+	string_t conf = "./conf.json";
+	ap.init(conf);
 	///create quot engine and trade engine.
-	satp::exc_info_t x; // = { "172.56.56.21", 9999 };
+	satp::engine_info_t x  = { "172.56.56.21", 9999 };
 	std::vector<std::string> contracts = { "a1603", "a1605" };
 	////
-	satp::quot_engine::pointer_t qe = ap.create_quot_engine(x, contracts);
+	satp::quot_engine_interface::pointer_t qe = ap.create_quot_engine(satp::engine_type::ET_DCE_L1_QUOT);
 	SU_ASSERT(nullptr != qe);
-	satp::trade_engine::pointer_t te = ap.create_trade_engine(x, contracts);
+	qe->init(x);
+	satp::trade_engine_interface::pointer_t te = ap.create_trade_engine(satp::engine_type::ET_DCE_TRADE);
 	SU_ASSERT(nullptr != te);
+	te->init(x);
 	///
 	my_algo1 ma;
 	ma.init(qe, te);
@@ -114,5 +117,9 @@ int main()
 		ma.exec();
 	}
 	ap.stop();
+	qe->destroy();
+	te->destroy();
+
+	return RET_SUC;
 }
 

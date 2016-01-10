@@ -23,7 +23,7 @@ namespace satp
 		CONN_CLOSED = 1
 	};
 
-	class dce_trade_engine: public CTradeAPI, public trade_engine, public smart_utils::timer_base //, public std::enable_shared_from_this<dce_trade_engine>
+	class dce_trade_engine: public CTradeAPI, public trade_engine_interface, public smart_utils::timer_notifier, public std::enable_shared_from_this<dce_trade_engine>
 	{
 		public:
 			typedef std::shared_ptr<satp::dce_trade_engine> pointer_t;
@@ -34,9 +34,10 @@ namespace satp
 
 		public:
 			///trade engine
-			int_fast8_t init(const exc_info_t &ei, const std::vector<std::string> &contracts);
+			int_fast8_t init(const engine_info_t &ei);
 			evt_t* get_evt();
-			int_fast8_t async_send_cmd(cmd_t &cmd);
+			void done();
+			int_fast8_t async_send_cmd(trade_cmd_t &cmd);
 			//smart_utils::notifier::pointer_t get_event();
 
 			///timer base.
@@ -69,25 +70,30 @@ namespace satp
 			std::vector<addr> fens_addrs_;
 			std::vector<addr> gw_addrs_;
 			string_t member_id_;
-			string_t trader_no_;
+			string_t trader_id_;
 			string_t program_id_;
 			string_t program_ver_;
 			string_t passwd_;
 			_fldTraderLoginRsp loginrsp_;
-			smart_utils::event_base::pointer_t evt_ptr_;
+			smart_utils::event_notifier conn_evt_notifier_;
+			smart_utils::event_notifier init_evt_notifier_;
 			smart_utils::smart_llrb llrb_;
-			struct contract_info
+			struct base_contract_info
 			{
 					CAPIVector<_fldOrder> send_req_;
 					_fldOrderAction withdraw_req_;
 					_fldFtrContract contract_info_;
-					_fldArbiContract arbi_contract_info_;
-					string_t contract_id_;
-					bool arbi_flag_;
 			};
-			std::unordered_map<uint64_t, struct contract_info> contract_infos_;
+			struct arbi_contract_info
+			{
+					CAPIVector<_fldOrder> send_req_;
+					_fldOrderAction withdraw_req_;
+					_fldArbiContract arbi_contract_info_;
+			};
+			std::unordered_map<uint64_t, struct base_contract_info> base_contract_infos_;
+			std::unordered_map<uint64_t, struct arbi_contract_info> arbi_contract_infos_;
 
-			//std::vector<string_t> contracts_;
+			engine_info_t engine_info_;
 	};
 
 } /* namespace qtp_bl */

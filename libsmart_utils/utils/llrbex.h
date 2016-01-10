@@ -38,7 +38,7 @@ namespace smart_utils
 				sz = ROUND_UP(sz, HUGE_PAGE_SIZE);
 				SU_ASSERT(0 == (sz & (sz - 1)));
 				SU_ASSERT(0 == sz / esz);
-				bytes_ = (byte_t*)mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB | MAP_HUGE_1GB | MAP_LOCKED, -1, 0);
+				bytes_ = (byte_t*) mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB | MAP_HUGE_1GB | MAP_LOCKED, -1, 0);
 				flag_ = false;
 				if (bytes_ == MAP_FAILED)
 				{
@@ -118,7 +118,7 @@ namespace smart_utils
 					return NULL;
 				}
 
-				uint64_t in = in & mask_;
+				uint64_t in = in_ & mask_;
 				uint64_t out = out_ & mask_;
 				if ((out > in) && ((mask_ + 1 - out) < bytes))
 				{

@@ -135,6 +135,8 @@ namespace satp
 	int_fast8_t shared::start()
 	{
 		ne_thread_ = std::make_shared<std::thread>(ne_func);
+
+		return 0;
 	}
 
 	void shared::exec()
@@ -154,36 +156,44 @@ namespace satp
 		return 0;
 	}
 
-	int_fast8_t shared::add_quot_engine(quot_engine::pointer_t &qe)
+	int_fast8_t shared::add_quot_engine(quot_engine_interface::pointer_t &qe)
 	{
-		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, quot_engine>(qe);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
+												smart_utils::notifier_interface,
+												quot_engine_interface>(qe);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_add_notifier(ptr);
 		return EC_SUC;
 	}
 
-	int_fast8_t shared::rem_quot_engine(quot_engine::pointer_t &qe)
+	int_fast8_t shared::rem_quot_engine(quot_engine_interface::pointer_t &qe)
 	{
-		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, quot_engine>(qe);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
+												smart_utils::notifier_interface,
+												quot_engine_interface>(qe);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_rem_notifier(ptr);
 		return 0;
 	}
 
-	int_fast8_t shared::add_trade_engine(trade_engine::pointer_t &te)
+	int_fast8_t shared::add_trade_engine(trade_engine_interface::pointer_t &te)
 	{
-		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, trade_engine>(te);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
+												smart_utils::notifier_interface,
+												trade_engine_interface>(te);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_add_notifier(ptr);
 		return EC_SUC;
 	}
 
-	int_fast8_t shared::rem_trade_engine(trade_engine::pointer_t &te)
+	int_fast8_t shared::rem_trade_engine(trade_engine_interface::pointer_t &te)
 	{
-		smart_utils::notifier::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier, trade_engine>(te);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
+												smart_utils::notifier_interface,
+												trade_engine_interface>(te);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_rem_notifier(ptr);
@@ -194,7 +204,6 @@ namespace satp
 	{
 		return 0;
 	}
-
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	int_fast8_t algo_trade_platform::init(const string_t &cf)
@@ -212,22 +221,24 @@ namespace satp
 		return SHARED().stop();
 	}
 
-	quot_engine::pointer_t algo_trade_platform::create_quot_engine(const exc_info_t& ei, const std::vector<std::string> &contracts)
+	quot_engine_interface::pointer_t algo_trade_platform::create_quot_engine(enum engine_type et)
 	{
-		quot_engine::pointer_t ptr = nullptr;
-		switch (ei.id_)
+		quot_engine_interface::pointer_t ptr = nullptr;
+		switch (et)
 		{
-			case satp::exchanges::EX_DCE:
+			case satp::engine_type::ET_DCE_L1_QUOT:
 			{
-				ptr = std::make_shared<satp::dce_quot_engine>();
-				if (EC_SUC != ptr->init(ei, contracts))
-				{
-					ptr = nullptr;
-				}
-				else
-				{
-					SHARED().add_quot_engine(ptr);
-				}
+				ptr = std::make_shared<
+														satp::dce_l1_quot_engine>();
+				SHARED().add_quot_engine(ptr);
+
+				break;
+			}
+			case satp::engine_type::ET_DCE_L2_QUOT:
+			{
+				//				ptr = std::make_shared<satp::dce_l2_quot_engine>();
+				//				SHARED().add_trade_engine(ptr);
+
 				break;
 			}
 			default:
@@ -240,31 +251,47 @@ namespace satp
 		return ptr;
 	}
 
-	trade_engine::pointer_t algo_trade_platform::create_trade_engine(const exc_info_t& ei, const std::vector<std::string> &contracts)
+	trade_engine_interface::pointer_t algo_trade_platform::create_trade_engine(enum engine_type et)
 	{
-		trade_engine::pointer_t ptr = nullptr;
-		switch (ei.id_)
+		trade_engine_interface::pointer_t ptr = nullptr;
+		switch (et)
 		{
-			case satp::exchanges::EX_DCE:
+			case satp::engine_type::ET_DCE_TRADE:
 			{
-				ptr = std::make_shared<satp::dce_trade_engine>();
-				if (EC_SUC != ptr->init(ei, contracts))
-				{
-					ptr = nullptr;
-				}
-				else
-				{
-					SHARED().add_trade_engine(ptr);
-				}
+				ptr = std::make_shared<
+														satp::dce_trade_engine>();
+				SHARED().add_trade_engine(ptr);
+
 				break;
 			}
 			default:
 			{
+				SU_ASSERT(false);
 				break;
 			}
 		}
 
 		return ptr;
+	}
+
+	inline int_fast8_t satp::shared::check_send_base_order()
+	{
+		return RET_SUC;
+	}
+
+	inline int_fast8_t satp::shared::check_send_arbi_order()
+	{
+		return RET_SUC;
+	}
+
+	inline int_fast8_t satp::shared::check_withdraw_base_order()
+	{
+		return RET_SUC;
+	}
+
+	inline int_fast8_t satp::shared::check_withdraw_arbi_order()
+	{
+		return RET_SUC;
 	}
 
 } /* namespace qtp_bl */
