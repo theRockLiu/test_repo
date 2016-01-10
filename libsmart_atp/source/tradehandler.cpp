@@ -66,31 +66,42 @@ namespace satp
 		{
 			case EVT_SEND_BASE_ORDER_REQ:
 			{
+				if (0 != SHARED().check_send_base_order(cmd))
+				{
+					LOGGER()->error("check order cmd failed\n");
+					return RET_ERR;
+				}
 				struct base_contract_info &x = base_contract_infos_[cmd.body_.sor_.contract_id_];
-				x.send_req_[0].Price = cmd.body_.sor_.price_;
+				x.send_req_[0].Price = cmd.body_.sor_.price_level_ * x.contract_info_.Tick + x.contract_info_.FallLimit;
 				uint32_t seqno = 0;
 				return ReqTraderInsertOrders(&seqno, x.send_req_);
 			}
 			case EVT_SEND_ARBI_ORDER_REQ:
 			{
-				struct arbi_contract_info &x = arbi_contract_infos_[cmd.body_.sor_.contract_id_];
-				x.send_req_[0].Price = cmd.body_.sor_.price_;
-				uint32_t seqno = 0;
-				return ReqTraderInsertOrders(&seqno, x.send_req_);
+//				if (0 != SHARED()->check_send_arbi_order(cmd))
+//				{
+//					LOGGER()->error("check order cmd failed\n");
+//					return RET_ERR;
+//				}
+//
+//				struct arbi_contract_info &x = arbi_contract_infos_[cmd.body_.sor_.contract_id_];
+//				x.send_req_[0].Price = cmd.body_.sor_.price_;
+//				uint32_t seqno = 0;
+//				return ReqTraderInsertOrders(&seqno, x.send_req_);
 			}
 			case EVT_WITHDRAW_BASE_ORDER_REQ:
 			{
-				struct base_contract_info &x = base_contract_infos_[cmd.body_.wor_.cid_];
-				x.withdraw_req_.SysOrderNo = cmd.body_.wor_.sys_no_;
-				uint32_t seqno = 0;
-				return ReqTraderCancelOrder(&seqno, x.withdraw_req_);
+//				struct base_contract_info &x = base_contract_infos_[cmd.body_.wor_.cid_];
+//				x.withdraw_req_.SysOrderNo = cmd.body_.wor_.sys_no_;
+//				uint32_t seqno = 0;
+//				return ReqTraderCancelOrder(&seqno, x.withdraw_req_);
 			}
 			case EVT_WITHDRAW_ARBI_ORDER_REQ:
 			{
-				struct arbi_contract_info &x = arbi_contract_infos_[cmd.body_.wor_.cid_];
-				x.withdraw_req_.SysOrderNo = cmd.body_.wor_.sys_no_;
-				uint32_t seqno = 0;
-				return ReqTraderCancelOrder(&seqno, x.withdraw_req_);
+//				struct arbi_contract_info &x = arbi_contract_infos_[cmd.body_.wor_.cid_];
+//				x.withdraw_req_.SysOrderNo = cmd.body_.wor_.sys_no_;
+//				uint32_t seqno = 0;
+//				return ReqTraderCancelOrder(&seqno, x.withdraw_req_);
 			}
 			default:
 			{
@@ -99,7 +110,7 @@ namespace satp
 			}
 		}
 
-		return 0;
+		return RET_SUC;
 	}
 
 	void dce_trade_engine::handle_timeout(uint64_t times)

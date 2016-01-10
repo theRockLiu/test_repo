@@ -42,7 +42,10 @@ namespace satp
 	enum engine_type
 		: uint8_t
 		{
-			ET_DCE_TRADE = 0, ET_DCE_L1_QUOT, ET_DCE_L2_QUOT, EX_SSE
+			ET_DCE_TRADE = 0,
+		ET_DCE_L1_QUOT,
+		ET_DCE_L2_QUOT,
+		EX_SSE
 	};
 
 	enum trade_type
@@ -54,7 +57,13 @@ namespace satp
 	enum market_statuss
 		:uint8_t
 		{
-			MS_TRADE_INIT = 0, MS_TRADE_AUCTION_SEND_ORDERS, MS_TRADE_AUCTION_PAUSE, MS_TRADE_AUCTION_MATCH, MS_TRADE_CONTINUE, MS_TRADE_PAUSE, MS_TRADE_CLOSED
+			MS_TRADE_INIT = 0,
+		MS_TRADE_AUCTION_SEND_ORDERS,
+		MS_TRADE_AUCTION_PAUSE,
+		MS_TRADE_AUCTION_MATCH,
+		MS_TRADE_CONTINUE,
+		MS_TRADE_PAUSE,
+		MS_TRADE_CLOSED
 	};
 
 	enum events
@@ -80,7 +89,7 @@ namespace satp
 	enum error_code
 		: int16_t
 		{
-			RET_SUC = 0
+			RET_ERR = -1, RET_SUC = 0
 	};
 
 	struct variety_status_rsp
@@ -183,7 +192,11 @@ namespace satp
 					struct send_order_req
 					{
 							uint64_t contract_id_;
-							double price_;
+							uint64_t client_id_;
+							uint32_t price_level_ :16;
+							uint32_t cnt_ :16;
+							uint32_t open_or_close_ :1;
+							uint32_t bid_or_ask_ :1;
 					} sor_;
 
 					struct withdraw_order_req
@@ -200,7 +213,8 @@ namespace satp
 	class quot_engine_interface
 	{
 		public:
-			typedef std::shared_ptr<satp::quot_engine_interface> pointer_t;
+			typedef std::shared_ptr<
+													satp::quot_engine_interface> pointer_t;
 		public:
 			quot_engine_interface()
 			{
@@ -221,7 +235,8 @@ namespace satp
 	class trade_engine_interface
 	{
 		public:
-			typedef std::shared_ptr<satp::trade_engine_interface> pointer_t;
+			typedef std::shared_ptr<
+													satp::trade_engine_interface> pointer_t;
 		public:
 			trade_engine_interface()
 			{

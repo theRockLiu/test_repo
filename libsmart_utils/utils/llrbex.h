@@ -21,6 +21,7 @@ namespace smart_utils
 	{
 		public:
 			smart_llrb()
+													: in_(0), mask_(0), bytes_(nullptr), esize_(0), flag_(false), out_(0)
 			{
 			}
 			~smart_llrb()

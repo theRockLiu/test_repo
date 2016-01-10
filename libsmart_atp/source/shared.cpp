@@ -274,22 +274,88 @@ namespace satp
 		return ptr;
 	}
 
-	inline int_fast8_t satp::shared::check_send_base_order()
+	int_fast8_t satp::shared::check_send_base_order(trade_cmd_t &cmd)
+	{
+		auto x = client_infos_.find(cmd.body_.sor_.client_id_);
+		if (x == client_infos_.end())
+		{
+			return RET_ERR;
+		}
+
+		///check cmd
+		auto y = x->second.base_constracts_.find(cmd.body_.sor_.contract_id_);
+		if (y == x->second.base_constracts_.end())
+		{
+			return RET_ERR;
+		}
+
+		if (cmd.body_.sor_.price_level_ < 0 || cmd.body_.sor_.price_level_ > y->second.max_price_level_)
+		{
+			return RET_ERR;
+		}
+
+		switch (cmd.body_.sor_.open_or_close_)
+		{
+			case OOC_OPEN:
+			{
+				switch (cmd.body_.sor_.bid_or_ask_)
+				{
+					case BOA_BID:
+					{
+						uint32_t posi = y->second.bid_req_posi_ - SU_AO(y->second.bid_rsp_withdraw_posi_) - SU_AO(y->second.bid_rsp_close_posi_) - SU_AO(y->second.bid_rsp_err_posi_) + cmd.body_.sor_.cnt_;
+						if (posi > y->second.max_bid_posi_)
+						{
+							return RET_ERR;
+						}
+
+						uint64_t margin_avail = x->second.margin_info_.sum_ - x->second.margin_info_.req_sum_ + SU_AO(x->second.margin_info_.rsp_withdraw_) + SU_AO(x->second.margin_info_.rsp_err_) + SU_AO(x->second.margin_info_.rsp_close_);
+						if (margin_avail < (cmd.body_.sor_.cnt_ * y->second.margin_unit))
+						{
+							return RET_ERR;
+						}
+
+						y->second.bid_req_posi_ += cmd.body_.sor_.cnt_;
+						x->second.margin_info_.req_sum_ += (cmd.body_.sor_.cnt_ * y->second.margin_unit);
+						break;
+					}
+					case BOA_ASK:
+					{
+						break;
+					}
+					default:
+					{
+						SU_ASSERT(false);
+						break;
+					}
+				}
+
+				break;
+			}
+			case OOC_CLOSE:
+			{
+				break;
+			}
+			default:
+			{
+				SU_ASSERT(false);
+				break;
+			}
+		}
+
+		return RET_SUC;
+	}
+
+	inline int_fast8_t satp::shared::check_send_arbi_order(trade_cmd_t &cmd)
 	{
 		return RET_SUC;
 	}
 
-	inline int_fast8_t satp::shared::check_send_arbi_order()
+	inline int_fast8_t satp::shared::check_withdraw_base_order(trade_cmd_t &cmd)
 	{
 		return RET_SUC;
 	}
 
-	inline int_fast8_t satp::shared::check_withdraw_base_order()
-	{
-		return RET_SUC;
-	}
-
-	inline int_fast8_t satp::shared::check_withdraw_arbi_order()
+	inline int_fast8_t satp::shared::check_withdraw_arbi_order(trade_cmd_t &cmd)
 	{
 		return RET_SUC;
 	}

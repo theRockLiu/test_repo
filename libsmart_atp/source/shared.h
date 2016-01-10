@@ -26,18 +26,64 @@ namespace spd = spdlog;
 
 namespace satp
 {
-	class client_info
+	enum open_or_close
 	{
+		OOC_OPEN = 0, OOC_CLOSE = 1
 
 	};
 
+	enum bid_or_ask
+	{
+		BOA_BID = 0, BOA_ASK = 1
+	};
+
 	class base_contract_info
+	{
+		public:
+			uint32_t max_bid_posi_;
+			uint32_t bid_req_posi_; /**< sender thread. */
+			uint32_t bid_rsp_done_posi_; /**< recver thread */
+			uint32_t bid_rsp_withdraw_posi_;/**< recver thread */
+			uint32_t bid_rsp_err_posi_;/**< recver thread */
+			uint32_t bid_rsp_close_posi_;
+
+			uint32_t ask_pending_posi_; /**< sender thread. */
+			uint32_t ask_done_posi_; /**< recver thread */
+			uint32_t ask_suc_posi_;/**< recver thread */
+			uint32_t ask_err_posi_;/**< recver thread */
+
+			uint32_t max_price_level_ :16;
+			uint32_t margin_unit :16;
+	};
+
+	class opt_contract_info
 	{
 
 	};
 
 	class arbi_contract_info
 	{
+
+	};
+
+	class margin_info
+	{
+		public:
+			uint64_t sum_;
+			uint64_t req_sum_;
+			uint64_t rsp_close_;
+			uint64_t rsp_withdraw_;
+			uint64_t rsp_err_;
+	};
+
+	class client_info
+	{
+
+		public:
+			std::unordered_map<uint64_t, base_contract_info> base_constracts_;
+			std::unordered_map<uint64_t, arbi_contract_info> arbi_constracts_;
+			std::unordered_map<uint64_t, opt_contract_info> opt_constracts_;
+			margin_info margin_info_;
 
 	};
 
@@ -67,10 +113,10 @@ namespace satp
 				return af_logger_;
 			}
 
-			inline int_fast8_t check_send_base_order();
-			inline int_fast8_t check_send_arbi_order();
-			inline int_fast8_t check_withdraw_base_order();
-			inline int_fast8_t check_withdraw_arbi_order();
+			int_fast8_t check_send_base_order(trade_cmd_t &cmd);
+			inline int_fast8_t check_send_arbi_order(trade_cmd_t &cmd);
+			inline int_fast8_t check_withdraw_base_order(trade_cmd_t &cmd);
+			inline int_fast8_t check_withdraw_arbi_order(trade_cmd_t &cmd);
 
 		private:
 			///running flag...
@@ -83,8 +129,6 @@ namespace satp
 			///thread
 			std::shared_ptr<std::thread> ne_thread_;
 			///
-			std::unordered_map<uint64_t, base_contract_info> base_constracts_;
-			std::unordered_map<uint64_t, arbi_contract_info> arbi_constracts_;
 			std::unordered_map<uint64_t, client_info> client_infos_;
 	};
 
