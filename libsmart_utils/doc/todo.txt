@@ -1,0 +1,5 @@
+
+todo:
+1, finish init file;
+2, finish risk control;
+3, finish a algo demo;
