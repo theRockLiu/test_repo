@@ -39,11 +39,13 @@ namespace smart_utils
 		public:
 			virtual int32_t open(bool flag) = 0;
 			virtual int32_t close() = 0;
-			virtual void on_added(bool Suc)
+			virtual void on_added(bool suc)
 			{
+				SU_ASSERT(suc);
 			}
-			virtual void on_removed(bool Suc)
+			virtual void on_removed(bool suc)
 			{
+				SU_ASSERT(suc);
 			}
 			virtual int32_t get_fd() = 0;
 			virtual uint32_t get_events() = 0;

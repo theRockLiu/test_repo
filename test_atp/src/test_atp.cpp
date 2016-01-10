@@ -96,8 +96,9 @@ int main()
 	satp::algo_trade_platform ap;
 	string_t conf = "./conf.json";
 	ap.init(conf);
+
 	///create quot engine and trade engine.
-	satp::engine_info_t x  = { "172.56.56.21", 9999 };
+	satp::engine_info_t x = { "172.56.56.21", 9999 };
 	std::vector<std::string> contracts = { "a1603", "a1605" };
 	////
 	satp::quot_engine_interface::pointer_t qe = ap.create_quot_engine(satp::engine_type::ET_DCE_L1_QUOT);
@@ -111,14 +112,13 @@ int main()
 	ma.init(qe, te);
 	evt_t *et = NULL;
 	////now run the engines.
+
 	ap.start();
 	for (;;)
 	{
 		ma.exec();
 	}
 	ap.stop();
-	qe->destroy();
-	te->destroy();
 
 	return RET_SUC;
 }

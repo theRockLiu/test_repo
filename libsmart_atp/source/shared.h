@@ -80,9 +80,9 @@ namespace satp
 	{
 
 		public:
-			std::unordered_map<uint64_t, base_contract_info> base_constracts_;
-			std::unordered_map<uint64_t, arbi_contract_info> arbi_constracts_;
-			std::unordered_map<uint64_t, opt_contract_info> opt_constracts_;
+			std::unordered_map<uint64_t, base_contract_info> base_contracts_;
+			std::unordered_map<uint64_t, arbi_contract_info> arbi_contracts_;
+			std::unordered_map<uint64_t, opt_contract_info> opt_contracts_;
 			margin_info margin_info_;
 
 	};
@@ -110,7 +110,7 @@ namespace satp
 			///
 			inline std::shared_ptr<spd::logger>& get_logger()
 			{
-				return af_logger_;
+				return c_logger_;
 			}
 
 			int_fast8_t check_send_base_order(trade_cmd_t &cmd);
@@ -122,8 +122,7 @@ namespace satp
 			///running flag...
 			bool r_flag_;
 			///loggers...
-			std::shared_ptr<spd::logger> c_logger_,
-													af_logger_;
+			std::shared_ptr<spd::logger> c_logger_, af_logger_;
 			///notifiers...
 			smart_utils::notifiers_engine ne_;
 			///thread

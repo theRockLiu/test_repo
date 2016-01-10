@@ -28,6 +28,7 @@ namespace
 namespace satp
 {
 	shared::shared()
+											: r_flag_(true)
 	{
 		// TODO Auto-generated constructor stub
 
@@ -62,7 +63,7 @@ namespace satp
 			//
 			// Runtime log levels
 			//
-			spd::set_level(spd::level::info); //Set global log level to info
+			spd::set_level(spd::level::debug); //Set global log level to info
 			c_logger_->debug("This message shold not be displayed!");
 			c_logger_->set_level(spd::level::debug); // Set specific logger's log level
 			c_logger_->debug("Now it should..");
@@ -101,9 +102,10 @@ namespace satp
 			// Asynchronous logging is very fast..
 			// Just call spdlog::set_async_mode(q_size) and all created loggers from now on will be asynchronous..
 			//
-			size_t q_size = 1048576; //queue size must be power of 2
-			spdlog::set_async_mode(q_size);
+//			size_t q_size = 16; //queue size must be power of 2
+//			spdlog::set_async_mode(q_size);
 			af_logger_ = spd::daily_logger_st("async_file_logger", "logs/async_log.txt");
+			af_logger_->set_level(spd::level::debug);
 			af_logger_->info() << "This is async log.." << "Should be very fast!";
 			//spdlog::drop_all(); //Close all loggers
 			//
@@ -122,18 +124,34 @@ namespace satp
 			return -1;
 		}
 
-		///get conf info
-		json j;
-		std::ifstream f(cf);
-		j << f;
+		/**
+		 * get conf info .
+		 * */
+		json json_obj;
+		std::ifstream file(cf);
+		json_obj << file;
 
-		c_logger_->debug("json 1: {0}", j["x"]);
+		LOGGER()->debug("read conf, the client count is {:d}!\n", json_obj.count("client_info"));
+		//af_logger_->flush();
 
-		return SU_EC_SUC;
+		for (auto &x : json_obj)
+		{
+			LOGGER()->debug(x.dump());
+//			const string_t &client_id = x["client_id"];
+//			auto &y = client_infos_[hash_str(client_id.c_str())];
+//			for (auto &z : x)
+//			{
+//
+//			}
+
+		}
+
+		return ne_.open();
 	}
 
 	int_fast8_t shared::start()
 	{
+		SU_AO(r_flag_) = true;
 		ne_thread_ = std::make_shared<std::thread>(ne_func);
 
 		return 0;
@@ -158,9 +176,7 @@ namespace satp
 
 	int_fast8_t shared::add_quot_engine(quot_engine_interface::pointer_t &qe)
 	{
-		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
-												smart_utils::notifier_interface,
-												quot_engine_interface>(qe);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier_interface, quot_engine_interface>(qe);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_add_notifier(ptr);
@@ -169,9 +185,7 @@ namespace satp
 
 	int_fast8_t shared::rem_quot_engine(quot_engine_interface::pointer_t &qe)
 	{
-		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
-												smart_utils::notifier_interface,
-												quot_engine_interface>(qe);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier_interface, quot_engine_interface>(qe);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_rem_notifier(ptr);
@@ -180,9 +194,7 @@ namespace satp
 
 	int_fast8_t shared::add_trade_engine(trade_engine_interface::pointer_t &te)
 	{
-		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
-												smart_utils::notifier_interface,
-												trade_engine_interface>(te);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier_interface, trade_engine_interface>(te);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_add_notifier(ptr);
@@ -191,9 +203,7 @@ namespace satp
 
 	int_fast8_t shared::rem_trade_engine(trade_engine_interface::pointer_t &te)
 	{
-		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<
-												smart_utils::notifier_interface,
-												trade_engine_interface>(te);
+		smart_utils::notifier_interface::pointer_t ptr = std::dynamic_pointer_cast<smart_utils::notifier_interface, trade_engine_interface>(te);
 		SU_ASSERT(nullptr != ptr);
 
 		ne_.async_rem_notifier(ptr);
@@ -228,9 +238,8 @@ namespace satp
 		{
 			case satp::engine_type::ET_DCE_L1_QUOT:
 			{
-				ptr = std::make_shared<
-														satp::dce_l1_quot_engine>();
-				SHARED().add_quot_engine(ptr);
+				ptr = std::make_shared<satp::dce_l1_quot_engine>();
+				//SHARED().add_quot_engine(ptr);
 
 				break;
 			}
@@ -258,9 +267,8 @@ namespace satp
 		{
 			case satp::engine_type::ET_DCE_TRADE:
 			{
-				ptr = std::make_shared<
-														satp::dce_trade_engine>();
-				SHARED().add_trade_engine(ptr);
+				ptr = std::make_shared<satp::dce_trade_engine>();
+				//SHARED().add_trade_engine(ptr);
 
 				break;
 			}
@@ -283,8 +291,8 @@ namespace satp
 		}
 
 		///check cmd
-		auto y = x->second.base_constracts_.find(cmd.body_.sor_.contract_id_);
-		if (y == x->second.base_constracts_.end())
+		auto y = x->second.base_contracts_.find(cmd.body_.sor_.contract_id_);
+		if (y == x->second.base_contracts_.end())
 		{
 			return RET_ERR;
 		}

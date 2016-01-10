@@ -38,7 +38,7 @@ namespace satp
 			 * timer event
 			 * */
 			void handle_timeout(uint64_t times);
-			void on_removed(bool Suc);
+			//void on_removed(bool Suc);
 			/**
 			 * quot api
 			 * */

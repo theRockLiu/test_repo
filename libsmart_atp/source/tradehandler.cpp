@@ -30,7 +30,10 @@ namespace satp
 		engine_info_ = ei;
 		conn_evt_notifier_.open(true);
 		init_evt_notifier_.open(true);
+		this->open(true);
 
+		trade_engine_interface::pointer_t x = std::dynamic_pointer_cast<satp::trade_engine_interface, satp::dce_trade_engine>(shared_from_this());
+		SU_ASSERT(RET_SUC == SHARED().add_trade_engine(x));
 //		for (auto &x : contracts)
 //		{
 //			struct base_contract_info s;
@@ -40,7 +43,12 @@ namespace satp
 //			base_contract_infos_[hash_str(x.c_str())] = s;
 //		}
 
-		return llrb_.init(LLRB_SIZE, ELEM_SIZE);
+		SU_ASSERT(RET_SUC == llrb_.init(LLRB_SIZE, ELEM_SIZE));
+
+		fens_addrs_.push_back( { ei.server_ip_, ei.server_port_ });
+		init_evt_notifier_.notify(1);
+
+		return RET_SUC;
 	}
 
 //	int_fast8_t dce_trade_engine::destroy()
@@ -113,19 +121,214 @@ namespace satp
 		return RET_SUC;
 	}
 
+	int dce_trade_engine::onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg& rspmsg, CAPIVector<_fldOrder>& lstOrder, BYTE bChainFlag)
+	{
+		SU_CHECK(CHAIN_SINGLE == bChainFlag);
+
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
+		evt->id_ = EVT_SEND_ORDER_RSP;
+		evt->body_.sor_.err_code_ = rspmsg.ErrCode;
+		evt->body_.sor_.cid_ = hash_str(lstOrder[0].ContractID.getValue());
+		evt->body_.sor_.local_no_ = lstOrder[0].LocalOrderNo;
+		evt->body_.sor_.sys_no_ = lstOrder[0].SysOrderNo;
+
+		llrb_.writer_commit_bytes(1);
+
+		return 0;
+	}
+
+	int dce_trade_engine::onRspTraderCancelOrder(UINT4 nSeqNo, const _fldRspMsg& rspmsg, const _fldOrderAction& orderaction, BYTE bChainFlag)
+	{
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
+		evt->id_ = EVT_SEND_ORDER_RSP;
+		evt->body_.wor_.err_code_ = rspmsg.ErrCode;
+		evt->body_.wor_.cid_ = hash_str(const_cast<_fldOrderAction&>(orderaction).ContractID.getValue());
+		evt->body_.wor_.local_no_ = orderaction.LocalOrderNo;
+		evt->body_.wor_.sys_no_ = orderaction.SysOrderNo;
+
+		llrb_.writer_commit_bytes(1);
+
+		return 0;
+	}
+
+	int dce_trade_engine::onNtyTraderMatch(UINT4 nSeqNo, const _fldMatch& match, BYTE bChainFlag)
+	{
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
+		evt->id_ = EVT_MATCH_RSP;
+		evt->body_.omr_.cid_ = hash_str(const_cast<_fldMatch&>(match).ContractID.getValue());
+		evt->body_.omr_.local_no_ = match.LocalID;
+		evt->body_.omr_.sys_no_ = match.SysOrderNo;
+
+		llrb_.writer_commit_bytes(1);
+
+		return 0;
+	}
+
+	int dce_trade_engine::onTraderOrdersConfirmation(UINT4 nSeqNo, const _fldOrderStatus& orderstatus, BYTE bChainFlag)
+	{
+		SU_ASSERT(CHAIN_SINGLE == bChainFlag);
+
+		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
+
+		evt->id_ = EVT_ORDER_STATUS;
+		evt->body_.osr_.sys_no_ = orderstatus.SysOrderNo;
+		evt->body_.osr_.local_no_ = orderstatus.LocalOrderNo;
+		evt->body_.osr_.client_id_ = hash_str(const_cast<_fldOrderStatus&>(orderstatus).ClientID.getValue());
+		evt->body_.osr_.contract_id_ = hash_str(const_cast<_fldOrderStatus&>(orderstatus).ContractID.getValue());
+
+		llrb_.writer_commit_bytes(1);
+
+		return 0;
+	}
+
+	int dce_trade_engine::onNtyMktStatus(UINT4 nSeqNo, const _fldMktStatus& mktstatus, CAPIVector<_fldVarietyMktStatus>& mVarietyMktStatus, BYTE bChainFlag)
+	{
+		SU_ASSERT(CHAIN_SINGLE == bChainFlag);
+		uint8_t status = 0;
+		switch (atoi(const_cast<_fldMktStatus&>(mktstatus).MktStatus.getValue()))
+		{
+			case 11: //11 EC_INIT
+			{
+				status = MS_TRADE_INIT;
+				break;
+			}
+			case 12:  //12 EC_AUCTION_ORDER
+			{
+				status = MS_TRADE_AUCTION_SEND_ORDERS;
+				break;
+			}
+			case 13:  //13 EC_AUCTION_PAUSE
+			{
+				status = MS_TRADE_AUCTION_PAUSE;
+				break;
+			}
+			case 14:   //14 EC_AUCTION_MATCH
+			{
+				status = MS_TRADE_AUCTION_MATCH;
+				break;
+			}
+			case 15:   //15 EC_TRADE
+			{
+				status = MS_TRADE_CONTINUE;
+				break;
+			}
+			case 16:   //16 EC_TRADE_PAUSE
+			{
+				status = MS_TRADE_PAUSE;
+				break;
+			}
+			case 50: //50 EC_CLOSE            "50"	          //????
+			{
+				status = MS_TRADE_CLOSED;
+				break;
+			}
+			default:
+			{
+				SU_ASSERT(false);
+				break;
+			}
+		}
+
+		evt_t* evt = NULL;
+		for (int i = 0; i < mVarietyMktStatus.GetCount(); i++)
+		{
+			if (0 == i % MAX_MARKET_STATUS_CNT)
+			{
+				evt = (evt_t*) llrb_.writer_get_bytes(1);
+				evt->id_ = EVT_MARKET_STATUS;
+				evt->body_.msr_.market_status_ = status;
+				evt->body_.msr_.cnt_ = 0;
+			}
+			evt->body_.msr_.cnt_++;
+			switch (atoi(mVarietyMktStatus.Get(i).Status.getValue()))
+			{
+				case 11:
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_INIT;
+					break;
+				}
+				case 12:  //12 EC_AUCTION_ORDER ???۱???
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_SEND_ORDERS;
+					break;
+				}
+				case 13:  //13 EC_AUCTION_PAUSE ??????ͣ
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_PAUSE;
+					break;
+				}
+				case 14:   //14 EC_AUCTION_MATCH ???۴??
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_MATCH;
+					break;
+				}
+				case 15:   //15 EC_TRADE         ????????
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_CONTINUE;
+					break;
+				}
+				case 16:   //16 EC_TRADE_PAUSE   ??????ͣ
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_PAUSE;
+					break;
+				}
+				case 50:   //50 EC_CLOSE         ???̱???
+				{
+					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_CLOSED;
+					break;
+				}
+				default:
+				{
+					SU_ASSERT(false);
+					break;
+				}
+			}
+			evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].trade_type_ = (
+			TT_OPT == mVarietyMktStatus.Get(i).TradeType ? TT_OPTION : TT_FUTURE);
+			evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].var_ = hash_str(mVarietyMktStatus.Get(i).VarietyId.getValue());
+			if (MAX_MARKET_STATUS_CNT == evt->body_.msr_.cnt_)
+			{
+				llrb_.writer_commit_bytes(1);
+			}
+		}
+		if (mVarietyMktStatus.GetCount() % MAX_MARKET_STATUS_CNT != 0)
+		{
+			llrb_.writer_commit_bytes(1);
+		}
+
+		return 0;
+	}
+
+	int dce_trade_engine::onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char* pAddr)
+	{
+		LOGGER()->error("invalid package: %u, %u, %u, %u, %u, %s\n", nTID, nSeries, nSequenceNo, nFieldCount, nFieldsLen, pAddr);
+		LOGGER()->flush();
+		SU_ASSERT(false);
+		return 0;
+	}
+
+	void dce_trade_engine::onChannelLost(const char* szErrMsg)
+	{
+		LOGGER()->error("trade conn closed:%s, %s, %s\n", member_id_.c_str(), trader_id_.c_str(), szErrMsg);
+		conn_evt_notifier_.notify(CONN_CLOSED);
+	}
+
 	void dce_trade_engine::handle_timeout(uint64_t times)
 	{
-		if (0 != init_evt_notifier_.wait_evt())
-		{
-			return;
-		}
+		//		if (0 != init_evt_notifier_.wait_evt())
+		//		{
+		//			return;
+		//		}
 
 		static class temp
 		{
 			public:
 				temp(dce_trade_engine* x, bool is_logged)
 				{
-					LOGGER()->info("api version: %s\n", x->Version());
+					LOGGER()->info("api version: {:s}\n", x->Version());
 					SU_ASSERT(0 == x->InitAPI(is_logged, NULL));
 				}
 		} x(this, is_logged_);
@@ -140,10 +343,12 @@ namespace satp
 			return;
 		}
 
+		LOGGER()->info("try to connect to trade system\n");
+
 		int32_t ret = InitCA(0, "", "", "", "", false);
 		if (0 != ret)
 		{
-			LOGGER()->error("init ca failed: %d!\n", ret);
+			LOGGER()->error("init ca failed: {:d}!\n", ret);
 			return;
 		}
 
@@ -162,7 +367,7 @@ namespace satp
 			ret = Connect();
 			if (0 != ret)
 			{
-				LOGGER()->error("connect to trade sys failed: %d!\n", ret);
+				LOGGER()->error("connect to trade sys failed: {:d}!\n", ret);
 				return;
 			}
 		}
@@ -244,204 +449,6 @@ namespace satp
 		Ready(READY, READY, true);
 
 		SU_AO(conn_state_) = CONN_OPENED;
-	}
-
-	int dce_trade_engine::onRspTraderInsertOrders(UINT4 nSeqNo, const _fldRspMsg& rspmsg, CAPIVector<
-											_fldOrder>& lstOrder, BYTE bChainFlag)
-	{
-		SU_CHECK(CHAIN_SINGLE == bChainFlag);
-
-		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
-
-		evt->id_ = EVT_SEND_ORDER_RSP;
-		evt->body_.sor_.err_code_ = rspmsg.ErrCode;
-		evt->body_.sor_.cid_ = hash_str(lstOrder[0].ContractID.getValue());
-		evt->body_.sor_.local_no_ = lstOrder[0].LocalOrderNo;
-		evt->body_.sor_.sys_no_ = lstOrder[0].SysOrderNo;
-
-		llrb_.writer_commit_bytes(1);
-
-		return 0;
-	}
-
-	int dce_trade_engine::onRspTraderCancelOrder(UINT4 nSeqNo, const _fldRspMsg& rspmsg, const _fldOrderAction& orderaction, BYTE bChainFlag)
-	{
-		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
-
-		evt->id_ = EVT_SEND_ORDER_RSP;
-		evt->body_.wor_.err_code_ = rspmsg.ErrCode;
-		evt->body_.wor_.cid_ = hash_str(const_cast<_fldOrderAction&>(orderaction).ContractID.getValue());
-		evt->body_.wor_.local_no_ = orderaction.LocalOrderNo;
-		evt->body_.wor_.sys_no_ = orderaction.SysOrderNo;
-
-		llrb_.writer_commit_bytes(1);
-
-		return 0;
-	}
-
-	int dce_trade_engine::onNtyTraderMatch(UINT4 nSeqNo, const _fldMatch& match, BYTE bChainFlag)
-	{
-		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
-
-		evt->id_ = EVT_MATCH_RSP;
-		evt->body_.omr_.cid_ = hash_str(const_cast<_fldMatch&>(match).ContractID.getValue());
-		evt->body_.omr_.local_no_ = match.LocalID;
-		evt->body_.omr_.sys_no_ = match.SysOrderNo;
-
-		llrb_.writer_commit_bytes(1);
-
-		return 0;
-	}
-
-	int dce_trade_engine::onTraderOrdersConfirmation(UINT4 nSeqNo, const _fldOrderStatus& orderstatus, BYTE bChainFlag)
-	{
-		SU_ASSERT(CHAIN_SINGLE == bChainFlag);
-
-		evt_t* evt = (evt_t*) llrb_.writer_get_bytes(1);
-
-		evt->id_ = EVT_ORDER_STATUS;
-		evt->body_.osr_.sys_no_ = orderstatus.SysOrderNo;
-		evt->body_.osr_.local_no_ = orderstatus.LocalOrderNo;
-		evt->body_.osr_.client_id_ = hash_str(const_cast<_fldOrderStatus&>(orderstatus).ClientID.getValue());
-		evt->body_.osr_.contract_id_ = hash_str(const_cast<_fldOrderStatus&>(orderstatus).ContractID.getValue());
-
-		llrb_.writer_commit_bytes(1);
-
-		return 0;
-	}
-
-	int dce_trade_engine::onNtyMktStatus(UINT4 nSeqNo, const _fldMktStatus& mktstatus, CAPIVector<
-											_fldVarietyMktStatus>& mVarietyMktStatus, BYTE bChainFlag)
-	{
-		SU_ASSERT(CHAIN_SINGLE == bChainFlag);
-		uint8_t status = 0;
-		switch (atoi(const_cast<_fldMktStatus&>(mktstatus).MktStatus.getValue()))
-		{
-			case 11: //11 EC_INIT
-			{
-				status = MS_TRADE_INIT;
-				break;
-			}
-			case 12:  //12 EC_AUCTION_ORDER
-			{
-				status = MS_TRADE_AUCTION_SEND_ORDERS;
-				break;
-			}
-			case 13:  //13 EC_AUCTION_PAUSE
-			{
-				status = MS_TRADE_AUCTION_PAUSE;
-				break;
-			}
-			case 14:   //14 EC_AUCTION_MATCH
-			{
-				status = MS_TRADE_AUCTION_MATCH;
-				break;
-			}
-			case 15:   //15 EC_TRADE
-			{
-				status = MS_TRADE_CONTINUE;
-				break;
-			}
-			case 16:   //16 EC_TRADE_PAUSE
-			{
-				status = MS_TRADE_PAUSE;
-				break;
-			}
-			case 50: //50 EC_CLOSE            "50"	          //????
-			{
-				status = MS_TRADE_CLOSED;
-				break;
-			}
-			default:
-			{
-				SU_ASSERT(false);
-				break;
-			}
-		}
-
-		evt_t* evt = NULL;
-		for (int i = 0; i < mVarietyMktStatus.GetCount();
-												i++)
-		{
-			if (0 == i % MAX_MARKET_STATUS_CNT)
-			{
-				evt = (evt_t*) llrb_.writer_get_bytes(1);
-				evt->id_ = EVT_MARKET_STATUS;
-				evt->body_.msr_.market_status_ = status;
-				evt->body_.msr_.cnt_ = 0;
-			}
-			evt->body_.msr_.cnt_++;
-			switch (atoi(mVarietyMktStatus.Get(i).Status.getValue()))
-			{
-				case 11:
-				{
-					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_INIT;
-					break;
-				}
-				case 12:  //12 EC_AUCTION_ORDER ???۱???
-				{
-					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_SEND_ORDERS;
-					break;
-				}
-				case 13:  //13 EC_AUCTION_PAUSE ??????ͣ
-				{
-					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_PAUSE;
-					break;
-				}
-				case 14:   //14 EC_AUCTION_MATCH ???۴??
-				{
-					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_AUCTION_MATCH;
-					break;
-				}
-				case 15:   //15 EC_TRADE         ????????
-				{
-					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_CONTINUE;
-					break;
-				}
-				case 16:   //16 EC_TRADE_PAUSE   ??????ͣ
-				{
-					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_PAUSE;
-					break;
-				}
-				case 50:   //50 EC_CLOSE         ???̱???
-				{
-					evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].status_ = MS_TRADE_CLOSED;
-					break;
-				}
-				default:
-				{
-					SU_ASSERT(false);
-					break;
-				}
-			}
-			evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].trade_type_ = (
-			TT_OPT == mVarietyMktStatus.Get(i).TradeType ? TT_OPTION : TT_FUTURE);
-			evt->body_.msr_.vsr_[evt->body_.msr_.cnt_ - 1].var_ = hash_str(mVarietyMktStatus.Get(i).VarietyId.getValue());
-			if (MAX_MARKET_STATUS_CNT == evt->body_.msr_.cnt_)
-			{
-				llrb_.writer_commit_bytes(1);
-			}
-		}
-		if (mVarietyMktStatus.GetCount() % MAX_MARKET_STATUS_CNT != 0)
-		{
-			llrb_.writer_commit_bytes(1);
-		}
-
-		return 0;
-	}
-
-	int dce_trade_engine::onInvalidPackage(UINT4 nTID, WORD nSeries, UINT4 nSequenceNo, WORD nFieldCount, WORD nFieldsLen, const char* pAddr)
-	{
-		LOGGER()->error("invalid package: %u, %u, %u, %u, %u, %s\n", nTID, nSeries, nSequenceNo, nFieldCount, nFieldsLen, pAddr);
-		LOGGER()->flush();
-		SU_ASSERT(false);
-		return 0;
-	}
-
-	void dce_trade_engine::onChannelLost(const char* szErrMsg)
-	{
-		LOGGER()->error("trade conn closed:%s, %s, %s\n", member_id_.c_str(), trader_id_.c_str(), szErrMsg);
-		conn_evt_notifier_.notify(CONN_CLOSED);
 	}
 
 } /* namespace qtp_bl */
