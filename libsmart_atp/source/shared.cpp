@@ -308,14 +308,15 @@ namespace satp
 							return RET_ERR;
 						}
 
-						uint64_t margin_avail = x->second.margin_info_.sum_ - x->second.margin_info_.req_sum_ + SU_AO(x->second.margin_info_.rsp_withdraw_) + SU_AO(x->second.margin_info_.rsp_err_) + SU_AO(x->second.margin_info_.rsp_close_);
-						if (margin_avail < (cmd.body_.sor_.cnt_ * y->second.margin_unit))
+						uint64_t margin_used = x->second.margin_info_.req_sum_ - SU_AO(x->second.margin_info_.rsp_withdraw_) - SU_AO(x->second.margin_info_.rsp_err_) - SU_AO(x->second.margin_info_.rsp_close_) + (cmd.body_.sor_.cnt_ * y->second.margin_unit);
+						if (margin_used > x->second.margin_info_.sum_)
 						{
 							return RET_ERR;
 						}
 
 						y->second.bid_req_posi_ += cmd.body_.sor_.cnt_;
 						x->second.margin_info_.req_sum_ += (cmd.body_.sor_.cnt_ * y->second.margin_unit);
+
 						break;
 					}
 					case BOA_ASK:
