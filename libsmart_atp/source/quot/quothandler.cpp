@@ -52,8 +52,7 @@ namespace satp
 //		return RET_SUC;
 //	}
 
-	evt_t*
-	dce_l1_quot_engine::get_evt()
+	evt_t* dce_l1_quot_engine::get_evt()
 	{
 		return (evt_t*) llrb_.reader_get_data(1);
 	}

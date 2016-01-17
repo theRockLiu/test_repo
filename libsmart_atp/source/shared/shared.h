@@ -63,7 +63,8 @@ namespace satp
 
 	class arbi_contract_info
 	{
-
+		public:
+			uint32_t max_bid_posi_;
 	};
 
 	class margin_info

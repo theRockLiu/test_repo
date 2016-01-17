@@ -134,17 +134,27 @@ namespace satp
 		//LOGGER()->debug("read conf, the client count is {:d}!\n", json_obj.count("client_info"));
 		//af_logger_->flush();
 
-		for (auto &x : json_obj)
+		for (auto x : json_obj)
 		{
 			LOGGER()->debug(x.dump());
-			const string_t client_id = x["client_id"];
-			LOGGER()->debug(client_id);
+			auto cid = x["client_id"];
+			LOGGER()->debug(cid);
+			auto base_contracts = x["base_contracts"];
+			LOGGER()->debug(base_contracts.dump());
+			for (auto y : base_contracts)
+			{
+				LOGGER()->debug(y.dump());
+				string_t tmp = y["id"];
+				client_infos_[cid].base_contracts_[hash_str(tmp.c_str())].max_bid_posi_ = y["max_bid_posi"];
+			}
 
-//			auto &y = client_infos_[hash_str(client_id.c_str())];
-//			for (auto &z : x)
-//			{
-//
-//			}
+			auto arbi_contracts = x["arbi_contracts"];
+			for (auto y : arbi_contracts)
+			{
+				LOGGER()->debug(y.dump());
+				string_t tmp = y[0];
+				client_infos_[cid].arbi_contracts_[hash_str(tmp.c_str())].max_bid_posi_ = 1;
+			}
 
 		}
 
@@ -217,7 +227,7 @@ namespace satp
 		return 0;
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
 	int_fast8_t algo_trade_platform::init(const string_t &cf)
 	{
 		return SHARED().init(cf);
