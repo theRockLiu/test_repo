@@ -129,15 +129,17 @@ namespace satp
 		 * */
 		json json_obj;
 		std::ifstream file(cf);
-		json_obj << file;
+		file >> json_obj;
 
-		LOGGER()->debug("read conf, the client count is {:d}!\n", json_obj.count("client_info"));
+		//LOGGER()->debug("read conf, the client count is {:d}!\n", json_obj.count("client_info"));
 		//af_logger_->flush();
 
 		for (auto &x : json_obj)
 		{
 			LOGGER()->debug(x.dump());
-//			const string_t &client_id = x["client_id"];
+			const string_t client_id = x["client_id"];
+			LOGGER()->debug(client_id);
+
 //			auto &y = client_infos_[hash_str(client_id.c_str())];
 //			for (auto &z : x)
 //			{
