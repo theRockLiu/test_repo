@@ -12,8 +12,8 @@
 #include <cinttypes>
 #include <utils/notifiers.h>
 #include <utils/llrbex.h>
-#include "../include/atp.h"
-#include "../apis/dce/Linux/trade/lib/TradeAPI.h"
+#include "../../include/atp.h"
+#include "../../apis/dce/Linux/trade/lib/TradeAPI.h"
 
 namespace satp
 {

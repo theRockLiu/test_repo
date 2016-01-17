@@ -12,10 +12,10 @@ using json = nlohmann::json;
 #include <base/base.h>
 using namespace smart_utils;
 
-#include "../include/atp.h"
+#include "../../include/atp.h"
 #include "shared.h"
-#include "quothandler.h"
-#include "tradehandler.h"
+#include "../quot/quothandler.h"
+#include "../trade/tradehandler.h"
 
 namespace
 {

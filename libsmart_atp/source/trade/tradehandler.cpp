@@ -5,8 +5,8 @@
  *      Author: rock
  */
 
-#include "../apis/dce/Linux/trade/PublicAPI/Constant.h"
-#include "shared.h"
+#include "../../apis/dce/Linux/trade/PublicAPI/Constant.h"
+#include "../shared/shared.h"
 #include "tradehandler.h"
 
 namespace satp

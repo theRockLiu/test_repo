@@ -6,7 +6,7 @@
  */
 
 #include <string.h>
-#include "shared.h"
+#include "../shared/shared.h"
 #include "quothandler.h"
 
 namespace satp

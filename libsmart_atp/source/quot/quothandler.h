@@ -15,8 +15,8 @@
 #include <utils/llrbex.h>
 using namespace smart_utils;
 
-#include "../apis/dce/Linux/quot/lib/QuotAPI.h"
-#include "../include/atp.h"
+#include "../../apis/dce/Linux/quot/lib/QuotAPI.h"
+#include "../../include/atp.h"
 
 namespace satp
 {
