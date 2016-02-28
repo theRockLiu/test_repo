@@ -205,9 +205,8 @@ namespace satp
 			///
 			std::unordered_map<uint64_t, client_info> client_infos_;
 			///
-			std::string rest_service_addr_; ///e.g. "http://localhost:8888"
-			rest_service rs_;
-
+			std::string rs_addr_; ///e.g. "http://localhost:8888"
+			std::unique_ptr<rest_service> rs_ptr_;
 	};
 
 #define SHARED() (smart_utils::singleton<satp::shared>::inst())

@@ -8,8 +8,8 @@
 #include <fstream>
 #include <memory>
 
-#include <json/json/src/json.hpp>
-using json = nlohmann::json;
+//#include <json/json/src/json.hpp>
+//using json = nlohmann::json;
 #include <base/base.h>
 using namespace smart_utils;
 
@@ -124,10 +124,9 @@ namespace satp
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	shared::shared()
-											: r_flag_(true), rs_(rest_service_addr_)
+											: r_flag_(true)
 	{
 		// TODO Auto-generated constructor stub
-
 	}
 
 	shared::~shared()
@@ -182,41 +181,45 @@ namespace satp
 		/**
 		 * get conf info .
 		 * */
-		json json_obj;
+		//json json_obj;
 		std::ifstream file(cf);
-		file >> json_obj;
+		//file >> json_obj;
 
 		//LOGGER()->debug("read conf, the client count is {:d}!\n", json_obj.count("client_info"));
 		//af_logger_->flush();
+		web::json::value v = web::json::value::parse(file);
+		LOGGER()->debug("json size: %d\n", v.size());
+		//rs_addr_ = ;
 
-		for (auto x : json_obj)
-		{
-			LOGGER()->debug(x.dump());
-			auto cid = x["client_id"];
-			LOGGER()->debug(cid);
-			auto base_contracts = x["base_contracts"];
-			LOGGER()->debug(base_contracts.dump());
-			for (auto y : base_contracts)
-			{
-				LOGGER()->debug(y.dump());
-				string_t tmp = y["id"];
-				client_infos_[cid].base_contracts_[hash_str(tmp.c_str())].max_bid_posi_ = y["max_bid_posi"];
-			}
-
-			auto arbi_contracts = x["arbi_contracts"];
-			for (auto y : arbi_contracts)
-			{
-				LOGGER()->debug(y.dump());
-				string_t tmp = y[0];
-				client_infos_[cid].arbi_contracts_[hash_str(tmp.c_str())].max_bid_posi_ = 1;
-			}
-
-		}
+//		for (auto x : json_obj)
+//		{
+//			LOGGER()->debug(x.dump());
+//			auto cid = x["client_id"];
+//			LOGGER()->debug(cid);
+//			auto base_contracts = x["base_contracts"];
+//			LOGGER()->debug(base_contracts.dump());
+//			for (auto y : base_contracts)
+//			{
+//				LOGGER()->debug(y.dump());
+//				string_t tmp = y["id"];
+//				client_infos_[cid].base_contracts_[hash_str(tmp.c_str())].max_bid_posi_ = y["max_bid_posi"];
+//			}
+//
+//			auto arbi_contracts = x["arbi_contracts"];
+//			for (auto y : arbi_contracts)
+//			{
+//				LOGGER()->debug(y.dump());
+//				string_t tmp = y[0];
+//				client_infos_[cid].arbi_contracts_[hash_str(tmp.c_str())].max_bid_posi_ = 1;
+//			}
+//
+//		}
 
 		///start rest service
 		// Build our listener's URI from the configured address
 		///and the hard-coded path "blackjack/dealer"
-		rs_.open().wait();
+		rs_ptr_ = std::unique_ptr<rest_service>(new rest_service(rs_addr_));
+		rs_ptr_->open().wait();
 
 		return ne_.open();
 	}
