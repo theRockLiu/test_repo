@@ -1,0 +1,1 @@
+*** [21:56:17 +08:00] [thread 3485] This is async log..Should be very fast! ***

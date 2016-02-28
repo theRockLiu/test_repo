@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <memory>
+
 #include <json/json/src/json.hpp>
 using json = nlohmann::json;
 #include <base/base.h>
@@ -27,8 +28,103 @@ namespace
 
 namespace satp
 {
+
+	rest_service::rest_service(utility::string_t url)
+											: http_listener_(url)
+	{
+		http_listener_.support(methods::GET, std::bind(&rest_service::handle_get, this, std::placeholders::_1));
+		http_listener_.support(methods::POST, std::bind(&rest_service::handle_post, this, std::placeholders::_1));
+
+		m_htmlcontentmap[U("/")] = std::make_tuple(U("AppCode.html"), U("text/html"));
+		m_htmlcontentmap[U("/js/default.js")] = std::make_tuple(U("js/default.js"), U("application/javascript"));
+		m_htmlcontentmap[U("/css/default.css")] = std::make_tuple(U("css/default.css"), U("text/css"));
+		m_htmlcontentmap[U("/image/logo.png")] = std::make_tuple(U("image/logo.png"), U("application/octet-stream"));
+		m_htmlcontentmap[U("/image/bing-logo.jpg")] = std::make_tuple(U("image/bing-logo.jpg"), U("application/octet-stream"));
+		m_htmlcontentmap[U("/image/wall.jpg")] = std::make_tuple(U("image/wall.jpg"), U("application/octet-stream"));
+	}
+
+	void rest_service::handle_error(pplx::task<void>& t)
+	{
+		try
+		{
+			t.get();
+		}
+		catch (...)
+		{
+			// Ignore the error, Log it if a logger is available
+		}
+	}
+
+	pplx::task<void> rest_service::open()
+	{
+		return http_listener_.open().then([](pplx::task<void> t)
+		{	handle_error(t);});
+	}
+
+	pplx::task<void> rest_service::close()
+	{
+		return http_listener_.close().then([](pplx::task<void> t)
+		{	handle_error(t);});
+	}
+
+	// Handler to process HTTP::GET requests.
+	// Replies to the request with data.
+	void rest_service::handle_get(http_request message)
+	{
+		auto path = message.relative_uri().path();
+		auto content_data = m_htmlcontentmap.find(path);
+		if (content_data == m_htmlcontentmap.end())
+		{
+			message.reply(status_codes::NotFound, U("Path not found")).then([](pplx::task<void> t)
+			{	handle_error(t);});
+			return;
+		}
+
+		auto file_name = std::get<0>(content_data->second);
+		auto content_type = std::get<1>(content_data->second);
+		concurrency::streams::fstream::open_istream(file_name, std::ios::in).then([=](concurrency::streams::istream is)
+		{
+			message.reply(status_codes::OK, is, content_type).then([](pplx::task<void> t)
+													{	handle_error(t);});
+		}).then([=](pplx::task<void> t)
+		{
+			try
+			{
+				t.get();
+			}
+			catch(...)
+			{
+				// opening the file (open_istream) failed.
+				// Reply with an error.
+				message.reply(status_codes::InternalError);
+			}
+		});
+	}
+
+	// Respond to HTTP::POST messages
+	// Post data will contain the postal code or location string.
+	// Aggregate location data from different services and reply to the POST request.
+	void rest_service::handle_post(http_request message)
+	{
+		auto path = message.relative_uri().path();
+		if (0 == path.compare(U("/")))
+		{
+			message.extract_string().then([=](const utility::string_t& location)
+			{
+				//get_data(message, location);
+			}).then([](pplx::task<void> t)
+			{	handle_error(t);});
+		}
+		else
+		{
+			message.reply(status_codes::NotFound, U("Path not found")).then([](pplx::task<void> t)
+			{	handle_error(t);});
+		}
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////
 	shared::shared()
-											: r_flag_(true)
+											: r_flag_(true), rs_(rest_service_addr_)
 	{
 		// TODO Auto-generated constructor stub
 
@@ -68,55 +164,14 @@ namespace satp
 			c_logger_->set_level(spd::level::debug); // Set specific logger's log level
 			c_logger_->debug("Now it should..");
 
-//		//
-//		// Create a file rotating logger with 5mb size max and 3 rotated files
-//		//
-//		file_logger_ = spd::rotating_logger_mt("file_logger_",
-//				"logs/mylogfile", 1048576 * 5, 3);
-//		for (int i = 0; i < 10; ++i)
-//			file_logger_->info("{} * {} equals {:>10}", i, i, i * i);
-
-			//
-			// Create a daily logger - a new file is created every day on 2:30am
-			//
-			// auto daily_logger = spd::daily_logger_mt("daily_logger", "logs/daily", 2, 30);
-
-			//
-			// Customize msg format for all messages
-			//
 			spd::set_pattern("*** [%H:%M:%S %z] [thread %t] %v ***");
-//		file_logger_->info("This is another message with custom format");
-//
-//		spd::get("console")->info(
-//				"loggers can be retrieved from a global registry using the spdlog::get(logger_name) function");
-
-			//
-			// Compile time debug or trace macros.
-			// Enabled #ifdef SPDLOG_DEBUG_ON or #ifdef SPDLOG_TRACE_ON
-			//
 			SPDLOG_TRACE(c_logger_, "Enabled only #ifdef SPDLOG_TRACE_ON..{} ,{}", 1,
 													3.23);SPDLOG_DEBUG(c_logger_, "Enabled only #ifdef SPDLOG_DEBUG_ON.. {} ,{}", 1,
 													3.23);
 
-			//
-			// Asynchronous logging is very fast..
-			// Just call spdlog::set_async_mode(q_size) and all created loggers from now on will be asynchronous..
-			//
-//			size_t q_size = 16; //queue size must be power of 2
-//			spdlog::set_async_mode(q_size);
-			af_logger_ = spd::daily_logger_st("async_file_logger", "logs/async_log.txt");
+			af_logger_ = spd::daily_logger_st("async_file_logger", "async_log.txt");
 			af_logger_->set_level(spd::level::debug);
 			af_logger_->info() << "This is async log.." << "Should be very fast!";
-			//spdlog::drop_all(); //Close all loggers
-			//
-			// syslog example. linux only..
-			//
-//#ifdef __linux__
-//		std::string ident = "spdlog-example";
-//		auto syslog_logger = spd::syslog_logger("syslog", ident, LOG_PID);
-//		syslog_logger->warn(
-//				"This is warning that will end up in syslog. This is Linux only!");
-//#endif
 		}
 		catch (const spd::spdlog_ex& ex)
 		{
@@ -157,6 +212,11 @@ namespace satp
 			}
 
 		}
+
+		///start rest service
+		// Build our listener's URI from the configured address
+		///and the hard-coded path "blackjack/dealer"
+		rs_.open().wait();
 
 		return ne_.open();
 	}

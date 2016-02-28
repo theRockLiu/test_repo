@@ -27,7 +27,7 @@ namespace satp
 		uint64_t hash = 5381;
 		int c;
 
-		while (c = *data++)
+		while (0 != (c = *(data++)))
 			hash = ((hash << 5) + hash) + c;
 
 		return hash;
@@ -42,10 +42,7 @@ namespace satp
 	enum engine_type
 		: uint8_t
 		{
-			ET_DCE_TRADE = 0,
-		ET_DCE_L1_QUOT,
-		ET_DCE_L2_QUOT,
-		EX_SSE
+			ET_DCE_TRADE = 0, ET_DCE_L1_QUOT, ET_DCE_L2_QUOT, EX_SSE
 	};
 
 	enum trade_type
@@ -57,13 +54,7 @@ namespace satp
 	enum market_statuss
 		:uint8_t
 		{
-			MS_TRADE_INIT = 0,
-		MS_TRADE_AUCTION_SEND_ORDERS,
-		MS_TRADE_AUCTION_PAUSE,
-		MS_TRADE_AUCTION_MATCH,
-		MS_TRADE_CONTINUE,
-		MS_TRADE_PAUSE,
-		MS_TRADE_CLOSED
+			MS_TRADE_INIT = 0, MS_TRADE_AUCTION_SEND_ORDERS, MS_TRADE_AUCTION_PAUSE, MS_TRADE_AUCTION_MATCH, MS_TRADE_CONTINUE, MS_TRADE_PAUSE, MS_TRADE_CLOSED
 	};
 
 	enum events
@@ -178,8 +169,8 @@ namespace satp
 
 	typedef struct engine_info
 	{
-			string_t server_ip_;
-			uint32_t server_port_ :16;
+			string_t load_balancer_ip_;
+			uint16_t load_balancer_port_;
 
 	} engine_info_t;
 
@@ -213,8 +204,7 @@ namespace satp
 	class quot_engine_interface
 	{
 		public:
-			typedef std::shared_ptr<
-													satp::quot_engine_interface> pointer_t;
+			typedef std::shared_ptr<satp::quot_engine_interface> pointer_t;
 		public:
 			quot_engine_interface()
 			{
@@ -235,8 +225,7 @@ namespace satp
 	class trade_engine_interface
 	{
 		public:
-			typedef std::shared_ptr<
-													satp::trade_engine_interface> pointer_t;
+			typedef std::shared_ptr<satp::trade_engine_interface> pointer_t;
 		public:
 			trade_engine_interface()
 			{

@@ -37,20 +37,11 @@ namespace satp
 
 		SU_ASSERT(RET_SUC == llrb_.init(LLRB_SIZE, ELEM_SIZE));
 
-		fens_addrs_.push_back({ei.server_ip_, ei.server_port_});
+		fens_addrs_.push_back({ei.load_balancer_ip_, ei.load_balancer_port_});
 		init_evt_notifier_.notify(1);
 
 		return RET_SUC;
 	}
-
-//	int_fast8_t dce_l1_quot_engine::destroy()
-//	{
-//		SHARED()->rem_quot_engine(std::dynamic_pointer_cast<satp::quot_engine_interface&>(shared_from_this()));
-////		conn_evt_notifier_.close();
-////		init_evt_notifier_.close();
-//
-//		return RET_SUC;
-//	}
 
 	evt_t* dce_l1_quot_engine::get_evt()
 	{
